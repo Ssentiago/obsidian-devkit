@@ -11,6 +11,10 @@
     },
     "test": {
       "dependsOn": ["build"]
+    },
+    "publish": {
+      "dependsOn": ["build"],
+      "cache": false
     }
   }
 }
