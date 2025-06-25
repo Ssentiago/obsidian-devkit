@@ -7,6 +7,10 @@ settings:
 importers:
 
   .:
+    dependencies:
+      '@obsidian-devtoolkit/native-react-components':
+        specifier: ^1.0.48
+        version: 1.0.48(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
     devDependencies:
       '@changesets/cli':
         specifier: ^2.29.5
@@ -66,6 +70,12 @@ importers:
       typescript:
         specifier: ^5.8.3
         version: 5.8.3
+
+  packages/toolkit:
+    dependencies:
+      '@obsidian-devtoolkit/native-react-components':
+        specifier: ^1.0.48
+        version: 1.0.48(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
 
 packages:
 
@@ -225,6 +235,9 @@ packages:
   '@nodelib/fs.walk@1.2.8':
     resolution: {integrity: sha512-oGB+UxlgWcgQkgwo8GcEGwemoTFt3FIO9ababBmaGwXIoBKZ+GTy0pP185beGg7Llih/NSHSV2XAs1lnznocSg==}
     engines: {node: '>= 8'}
+
+  '@obsidian-devtoolkit/native-react-components@1.0.48':
+    resolution: {integrity: sha512-ld4E216g5ezrS0WR1jgSTvESp8wxzox3tunKYxuLVAyHH1eWtRoZ62dCqP8QjUNY9L7iv4ARn5ghdbcxgSxjaw==}
 
   '@types/codemirror@5.60.8':
     resolution: {integrity: sha512-VjFgDF/eB+Aklcy15TtOTLQeMjTo07k7KAjql8OK5Dirr7a6sJY4T1uVBDuTVG9VEmn1uUsohOpYnVfgC6/jyw==}
@@ -1694,6 +1707,13 @@ snapshots:
     dependencies:
       '@nodelib/fs.scandir': 2.1.5
       fastq: 1.19.1
+
+  '@obsidian-devtoolkit/native-react-components@1.0.48(react-dom@19.1.0(react@19.1.0))(react@19.1.0)':
+    dependencies:
+      styled-components: 6.1.19(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+    transitivePeerDependencies:
+      - react
+      - react-dom
 
   '@types/codemirror@5.60.8':
     dependencies:

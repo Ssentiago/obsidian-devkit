@@ -8,7 +8,7 @@
     "test": "turbo test",
     "changeset": "changeset",
     "version": "changeset version",
-    "publish": "changeset publish"
+    "pub": "changeset publish"
   },
   "devDependencies": {
     "@changesets/cli": "^2.29.5",
