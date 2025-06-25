@@ -3,8 +3,8 @@
   "private": true,
   "version": "1.0.1",
   "scripts": {
-    "build": "turbo build",
-    "dev": "turbo dev",
+    "b": "turbo build",
+    "d": "turbo dev",
     "test": "turbo test",
     "changeset": "changeset",
     "version": "changeset version",
@@ -15,8 +15,9 @@
     "turbo": "^2.5.4",
     "typescript": "^5.8.3"
   },
-  "packageManager": "pnpm@10.12.3",
+  "packageManager": "bun@1.2.17",
   "dependencies": {
-    "@inquirer/prompts": "^7.5.3"
+    "@inquirer/prompts": "^7.5.3",
+    "@trivago/prettier-plugin-sort-imports": "^5.2.2"
   }
 }

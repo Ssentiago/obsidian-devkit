@@ -1,36 +1,35 @@
 {
-  "name": "dev-tools",
-  "publishConfig": {
-    "access": "public"
-  },
-  "version": "1.0.0",
-  "description": "",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
-  "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.js",
-      "require": "./dist/index.js"
+    "name": "dev-tools",
+    "publishConfig": {
+        "access": "public"
+    },
+    "version": "1.0.0",
+    "description": "",
+    "main": "dist/index.js",
+    "types": "dist/index.d.ts",
+    "exports": {
+        ".": {
+            "types": "./dist/index.d.ts",
+            "import": "./dist/index.js",
+            "require": "./dist/index.js"
+        }
+    },
+    "scripts": {
+        "build": "tsc",
+        "dev": "tsc --watch"
+    },
+    "keywords": [],
+    "author": "",
+    "license": "ISC",
+    "dependencies": {
+        "@inquirer/prompts": "^7.5.3",
+        "@types/node": "^24.0.4",
+        "chalk": "^5.4.1",
+        "prettier": "^3.6.1",
+        "ps-list": "^8.1.1",
+        "semver": "^7.7.2"
+    },
+    "devDependencies": {
+        "@types/semver": "^7.7.0"
     }
-  },
-  "scripts": {
-    "build": "tsc",
-    "dev": "tsc --watch"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "packageManager": "pnpm@10.12.3",
-  "dependencies": {
-    "@inquirer/prompts": "^7.5.3",
-    "@types/node": "^24.0.4",
-    "chalk": "^5.4.1",
-    "prettier": "^3.6.1",
-    "ps-list": "^8.1.1",
-    "semver": "^7.7.2"
-  },
-  "devDependencies": {
-    "@types/semver": "^7.7.0"
-  }
 }
