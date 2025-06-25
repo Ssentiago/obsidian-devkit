@@ -1,6 +1,6 @@
 {
     "compilerOptions": {
-        "baseUrl": "./src",
+        "baseUrl": "./packages/native-react-components/src",
         "module": "ESNext",
         "jsx": "react-jsx",
         "target": "ES2023",
