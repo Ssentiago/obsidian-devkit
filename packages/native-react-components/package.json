@@ -1,6 +1,9 @@
 {
   "name": "@obsidian-devtoolkit/native-react-components",
-  "version": "1.0.47",
+    "publishConfig": {
+        "access": "public"
+    },
+  "version": "1.0.48",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "exports": {

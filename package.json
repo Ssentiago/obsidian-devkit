@@ -1,6 +1,6 @@
 {
-  "name": "obsidian-devtoolkit",
-  "private": false,
+  "private": true,
+  "version": "1.0.1",
   "scripts": {
     "build": "turbo build",
     "dev": "turbo dev",
