@@ -4,9 +4,7 @@
   "type": "module",
   "main": "index.js",
   "dependencies": {
-    "@obsidian-devtoolkit/native-react-components": "^1.0.48",
-    "@obsidian-devtoolkit/react-settings": "^1.0.0",
-    "@obsidian-devtoolkit/reactive-proxy": "^1.0.0"
+    "@obsidian-devtoolkit/native-react-components": "^1.0.48"
   },
   "publishConfig": {
     "access": "public"
