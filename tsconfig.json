@@ -1,34 +1,13 @@
 {
     "compilerOptions": {
-        "baseUrl": "./packages/native-react-components/src",
         "module": "ESNext",
-        "jsx": "react-jsx",
         "target": "ES2023",
-        "allowJs": false,
+        "moduleResolution": "node",
+        "jsx": "react-jsx",
+        "types": ["node"],
         "strict": true,
-        "noImplicitAny": true,
-        "moduleResolution": "bundler",
-        "typeRoots": ["node_modules/@types"],
-        "importHelpers": true,
-        "isolatedModules": true,
-        "allowSyntheticDefaultImports": true,
-        "strictNullChecks": true,
-        "lib": ["DOM", "ES2023"],
-        "skipLibCheck": true,
-        "exactOptionalPropertyTypes": false,
-        "noUncheckedIndexedAccess": false,
-        "noImplicitReturns": true,
-        "noFallthroughCasesInSwitch": true,
-        "outDir": "dist/",
-        "removeComments": true,
-        "incremental": true,
-        "sourceMap": false,
         "declaration": true,
-        "declarationMap": false,
-        "emitDeclarationOnly": false,
-        "inlineSourceMap": false,
-        "inlineSources": false
-
-    },
-    "include": ["src/**/*.ts", "src/**/*.tsx", "obsidian-extensions.d.ts"]
+        "skipLibCheck": true,
+        "esModuleInterop": true
+    }
 }
