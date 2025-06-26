@@ -1,0 +1,14 @@
+{
+    "name": "@obsidian-devkit/locale-tools",
+    "version": "1.0.7",
+    "description": "",
+    "author": "",
+    "type": "module",
+    "main": "dist/index.js",
+    "bin": {
+        "locale-tools": "dist/index.js"
+    },
+    "scripts": {
+        "build": "tsc"
+    }
+}

@@ -1,0 +1,183 @@
+{
+  "main": {
+    "id": "74d8cfcfdf0f9dc1",
+    "type": "split",
+    "children": [
+      {
+        "id": "ee7bcff53059b80b",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "d48b4d40c1c4f1c7",
+            "type": "leaf",
+            "state": {
+              "type": "empty",
+              "state": {},
+              "icon": "lucide-file",
+              "title": "Новая вкладка"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "vertical"
+  },
+  "left": {
+    "id": "559da8d0beaec989",
+    "type": "split",
+    "children": [
+      {
+        "id": "0eae4f44c364d2c9",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "1faa5528614f8f06",
+            "type": "leaf",
+            "state": {
+              "type": "file-explorer",
+              "state": {
+                "sortOrder": "alphabetical",
+                "autoReveal": false
+              },
+              "icon": "lucide-folder-closed",
+              "title": "Файловый менеджер"
+            }
+          },
+          {
+            "id": "88fecc087033645c",
+            "type": "leaf",
+            "state": {
+              "type": "search",
+              "state": {
+                "query": "",
+                "matchingCase": false,
+                "explainSearch": false,
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical"
+              },
+              "icon": "lucide-search",
+              "title": "Search"
+            }
+          },
+          {
+            "id": "357f96a464def1c3",
+            "type": "leaf",
+            "state": {
+              "type": "bookmarks",
+              "state": {},
+              "icon": "lucide-bookmark",
+              "title": "Bookmarks"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 293.5
+  },
+  "right": {
+    "id": "19e6ddb71608ebad",
+    "type": "split",
+    "children": [
+      {
+        "id": "e6cbc5d9b9875d63",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "f8cea768e03311d4",
+            "type": "leaf",
+            "state": {
+              "type": "backlink",
+              "state": {
+                "file": "simple mermaid.md",
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical",
+                "showSearch": false,
+                "searchQuery": "",
+                "backlinkCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-coming-in",
+              "title": "Backlinks for simple mermaid"
+            }
+          },
+          {
+            "id": "587ce8bec54769c3",
+            "type": "leaf",
+            "state": {
+              "type": "outgoing-link",
+              "state": {
+                "file": "simple mermaid.md",
+                "linksCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-going-out",
+              "title": "Outgoing links from simple mermaid"
+            }
+          },
+          {
+            "id": "bce6cc63356ef9b4",
+            "type": "leaf",
+            "state": {
+              "type": "tag",
+              "state": {
+                "sortOrder": "frequency",
+                "useHierarchy": true,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-tags",
+              "title": "Tags"
+            }
+          },
+          {
+            "id": "d5b0eef764625193",
+            "type": "leaf",
+            "state": {
+              "type": "outline",
+              "state": {
+                "file": "simple mermaid.md",
+                "followCursor": false,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-list",
+              "title": "Outline of simple mermaid"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300,
+    "collapsed": true
+  },
+  "left-ribbon": {
+    "hiddenItems": {
+      "switcher:Меню быстрого перехода": false,
+      "graph:Граф": false,
+      "canvas:Создать новый холст": false,
+      "daily-notes:Сегодняшняя заметка": false,
+      "templates:Вставить шаблон": false,
+      "command-palette:Открыть палитру команд": false
+    }
+  },
+  "active": "1faa5528614f8f06",
+  "lastOpenFiles": [
+    "some mermaids.md",
+    "one mermaid.md",
+    "two embed local images.md",
+    "mehrmaid.md",
+    "huge plantuml.md",
+    "very huge mermaid.md",
+    "two simple mermaid and one huge.md",
+    "three simple mermaids.md",
+    "one huge mermaid and two mehrmaids.md",
+    "one embed internal image.md",
+    "graphviz.md",
+    "Pasted image 20250616233435.png",
+    "simple mermaid.md"
+  ]
+}

@@ -1,0 +1,13 @@
+{
+    "name": "@obsidian-devtoolkit/create-obsidian-plugin",
+    "module": "index.ts",
+    "type": "module",
+    "private": false,
+    "devDependencies": {
+        "@types/bun": "^1.2.17"
+    },
+    "files": [
+        "dist/",
+        "templates/"
+    ]
+}

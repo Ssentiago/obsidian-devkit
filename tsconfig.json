@@ -8,6 +8,8 @@
         "strict": true,
         "declaration": true,
         "skipLibCheck": true,
-        "esModuleInterop": true
+        "esModuleInterop": true,
+        "allowImportingTsExtensions": false,
+        "resolveJsonModule": true
     }
 }

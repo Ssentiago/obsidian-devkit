@@ -1,0 +1,11 @@
+/node_modules/
+
+dist
+
+bundle*
+
+/test-vault/.obsidian/plugins/Interactify/
+
+.yarn
+
+dependency-graph.svg

@@ -1,5 +1,5 @@
 {
-    "name": "@obsidian-devtoolkit/native-react-components",
+    "name": "@obsidian-devkit/native-react-components",
     "publishConfig": {
         "access": "public"
     },
