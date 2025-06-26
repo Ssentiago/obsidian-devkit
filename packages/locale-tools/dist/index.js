@@ -1,8 +1,6 @@
 #!/usr/bin/env node
 import { Command } from 'commander';
 import { readFileSync, readdirSync, writeFileSync, existsSync, mkdirSync, } from 'fs';
-import { execSync } from 'node:child_process';
-import { unlinkSync } from 'node:fs';
 import { join } from 'path';
 import { pathToFileURL } from 'url';
 const LANG_DIR = './src/lang';
@@ -68,81 +66,124 @@ function generateTypesFromNest(nest) {
 function getTranslationGuide() {
     return `# Translation Guide
 
-## Getting Started
+## Quick Start Workflow
 
-### 1. Find Your Language Code
-- Visit [ISO 639-1 Language Codes](https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes) to find your language code
-- Use the two-letter code (e.g., \`de\` for German, \`fr\` for French, \`es\` for Spanish)
-- For region-specific variants, use format like \`en-US\`, \`zh-CN\`, \`pt-BR\`
+### 1. Setup
+\`\`\`bash
+git clone <repository>
+npm install
+npm run locale:template <LANGUAGE_CODE>
+\`\`\`
 
-### 2. Start Translating
-1. Open \`flat.json\` in this folder
-2. Translate the **values** (keep the keys unchanged)
-3. When done, run: \`npm run locale nest ${process.argv[3] || 'your-locale'}\`
+### 2. Translate
+\`\`\`bash
+cd ./src/lang/locale/<LANGUAGE_CODE>/
+# Edit flat.json - translate values, keep keys unchanged
+\`\`\`
 
-### 3. Submit Your Translation
-- Create a pull request with your locale folder
-- Include both \`flat.json\` and generated \`index.ts\`
+### 3. Generate & Submit
+\`\`\`bash
+npm run locale:nest <LANGUAGE_CODE>
+npm run locale:check-locales  # optional: validate your work
+git add . && git commit -m "Add <LANGUAGE_CODE> translation"
+# Create pull request with both flat.json and generated index.ts
+\`\`\`
+
+## Language Codes
+- Visit [ISO 639-1 Language Codes](https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes)
+- Use two-letter codes: \`de\`, \`fr\`, \`es\`, \`ru\`
+- Region variants: \`en-US\`, \`zh-CN\`, \`pt-BR\`
 
 ## Translation Rules
 
 ### ✅ DO:
-- **Preserve structure**: Keep array and object structures intact
- - \`["item1", "item2"]\` → \`["элемент1", "элемент2"]\`
-- **Keep variables untouched**: Variables in \`{{brackets}}\` must remain exactly as they are
- - \`"Hello {{name}}"\` → \`"Привет {{name}}"\`
-- **Maintain line breaks**: Keep \`\\n\` for multi-line messages
-- **Respect key hierarchy**: Keys like \`"settings.pages.debug"\` show UI component structure
+- **Preserve structure**: Keep arrays and objects intact
+- \`["item1", "item2"]\` → \`["элемент1", "элемент2"]\`
+- **Keep variables**: Variables in \`{{brackets}}\` must stay exactly as-is
+- \`"Hello {{name}}"\` → \`"Привет {{name}}"\`
+- **Maintain formatting**: Keep \`\\n\` line breaks and spacing
+- **Natural translation**: Translate meaning, not word-by-word
 
 ### ❌ DON'T:
-- Change or remove JSON keys
-- Translate variables in \`{{brackets}}\`
+- Change JSON keys (\`"settings.pages.debug"\` stays as-is)
+- Translate \`{{variables}}\` inside brackets
 - Reorder array elements
-- Break JSON syntax (missing quotes, commas, brackets)
+- Break JSON syntax (quotes, commas, brackets)
 
 ## Examples
 
 ### Simple String
 \`\`\`json
 "commands.togglePanels.notice.shown": "Control panels shown"
-// ✅ Should become:
+// ✅ Becomes:
 "commands.togglePanels.notice.shown": "Панели управления показаны"
 \`\`\`
 
-### String with Variables
+### With Variables
 \`\`\`json
-"settings.pages.debug.clearLogsStorage.desc": "Storage: {{storage}}, Entries: {{entries}}"
-// ✅ Should become:
-"settings.pages.debug.clearLogsStorage.desc": "Хранилище: {{storage}}, Записи: {{entries}}"
+"settings.debug.storage.desc": "Storage: {{storage}}, Entries: {{entries}}"
+// ✅ Becomes:
+"settings.debug.storage.desc": "Хранилище: {{storage}}, Записи: {{entries}}"
 \`\`\`
 
 ### Array of Strings
 \`\`\`json
-"settings.pages.debug.reportIssue.desc": [
-  "If you encounter any issues, please report them.",
-  "How to report:",
-  "1. Enable debug logging"
+"help.steps": [
+ "Step 1: Enable feature",
+ "Step 2: Configure settings",  
+ "Step 3: Save changes"
 ]
-// ✅ Should become:
-"settings.pages.debug.reportIssue.desc": [
-  "Если у вас возникли проблемы, сообщите о них.",
-  "Как сообщить:",
-  "1. Включите отладочное логирование"
+// ✅ Becomes:
+"help.steps": [
+ "Шаг 1: Включить функцию",
+ "Шаг 2: Настроить параметры",
+ "Шаг 3: Сохранить изменения"
 ]
 \`\`\`
 
-## Best Practices
+## Tips
+- **UI context matters**: Consider where text appears (buttons vs tooltips)
+- **Length constraints**: Some UI elements have space limits - adapt accordingly
+- **Consistent tone**: Match formality level of original text
+- **Check existing translations**: Look at other locale folders for reference
+- **Validate JSON**: Use online JSON validators if unsure about syntax
 
-- **Natural translation**: Translate the meaning, not word-by-word
-- **Keep UI context**: Consider where the text appears (buttons, tooltips, messages)
-- **Test length**: Some UI elements have space constraints - shorten if needed
-- **Maintain tone**: Keep the same level of formality as the original
-- **Handle pluralization**: Adapt to your language's plural rules
+## Available Commands
+- \`npm run locale:template <CODE>\` - Create new locale template
+- \`npm run locale:nest <CODE>\` - Generate TypeScript from flat.json
+- \`npm run locale:check-locales\` - Validate all translations
+- \`npm run locale:update-all-nested\` - Bulk update all locales
 
 ## Need Help?
-- Check existing translations in other language folders for reference
-- Ask questions in GitHub issues before starting large translations
-- Test your JSON syntax using online JSON validators`;
+- Check other language folders for examples
+- Open GitHub issue for questions before starting large translations
+- Test your JSON syntax before submitting`;
+}
+async function getObjectFromTs(tsPath) {
+    const content = readFileSync(tsPath, 'utf8');
+    // Парсим TypeScript объявление вида:
+    // const Locale: LocaleSchema = { ... };
+    // const Locale : DeepPartial<LocaleSchema> = { ... };
+    const objectRegex = new RegExp([
+        'const\\s+', // "const" + обязательные пробелы
+        '\\w+', // имя переменной (Locale)
+        '\\s*', // необязательные пробелы перед двоеточием
+        ':', // двоеточие
+        '\\s*', // необязательные пробелы после двоеточия
+        '[\\w<>[\\],\\s]+', // тип (LocaleSchema, DeepPartial<LocaleSchema>, etc)
+        '\\s*', // необязательные пробелы перед равно
+        '=', // знак равно
+        '\\s*', // необязательные пробелы после равно
+        '({[\\s\\S]*?})', // объект в скобках (захватывающая группа) - ЭТО НАМ НУЖНО
+        '\\s*', // необязательные пробелы перед точкой с запятой
+        ';', // точка с запятой
+    ].join(''));
+    const objectMatch = content.match(objectRegex);
+    if (!objectMatch) {
+        throw new Error(`Object declaration not found in: ${tsPath}`);
+    }
+    // objectMatch[1] - это JSON объект из захватывающей группы
+    return JSON.parse(objectMatch[1]);
 }
 async function generateTypes() {
     const enLocaleDir = join(LOCALE_DIR, 'en');
@@ -153,17 +194,7 @@ async function generateTypes() {
         process.exit(1);
     }
     try {
-        const fullPath = pathToFileURL(join(process.cwd(), tsPath)).href;
-        const tempScript = `
-import module from '${fullPath}';
-console.log(JSON.stringify(module));
-`;
-        writeFileSync('./temp-import.mjs', tempScript);
-        const result = execSync('npx tsx ./temp-import.mjs', {
-            encoding: 'utf-8',
-        });
-        unlinkSync('./temp-import.mjs');
-        const nested = JSON.parse(result.trim());
+        const nested = await getObjectFromTs(tsPath);
         const types = generateTypesFromNest(nested);
         if (!existsSync(TYPES_DIR)) {
             mkdirSync(TYPES_DIR, { recursive: true });
@@ -265,6 +296,145 @@ export default Locale;`;
         process.exit(1);
     }
 }
+async function getLocaleStats(locale) {
+    const localeDir = join(LOCALE_DIR, locale);
+    const enFlatPath = join(LOCALE_DIR, 'en', 'flat.json');
+    const jsonPath = join(localeDir, 'flat.json');
+    if (!existsSync(enFlatPath)) {
+        console.error('❌ Error: en/flat.json not found');
+        process.exit(1);
+    }
+    if (!existsSync(jsonPath)) {
+        console.warn(`⚠️ Warning: ${jsonPath} not found\n`);
+        process.exit(1);
+    }
+    const enFlat = JSON.parse(readFileSync(enFlatPath, 'utf8'));
+    const enMap = new Map(Object.entries(enFlat));
+    const totalKeys = enMap.size;
+    try {
+        const flatData = JSON.parse(readFileSync(jsonPath, 'utf8'));
+        const flatMap = new Map(Object.entries(flatData));
+        const missingData = [...enMap].filter(([key, _]) => !flatMap.has(key));
+        const extraData = [...flatMap].filter(([key, _]) => !enMap.has(key));
+        const actualKeys = [...enMap].filter(([key, _]) => flatMap.has(key));
+        const untranslatedKeys = [...actualKeys].filter(([key, value]) => value === enFlat[key]);
+        const completed = totalKeys - missingData.length - untranslatedKeys.length;
+        const percentage = Math.round((completed / totalKeys) * 100 * 10) / 10;
+        return {
+            locale,
+            completed,
+            missing: missingData,
+            extra: extraData,
+            untranslated: untranslatedKeys,
+            percentage,
+            enFlat,
+        };
+    }
+    catch (error) {
+        console.error(`❌ Error validating ${jsonPath}:`, error);
+        process.exit(1);
+    }
+}
+function printSummary(total, stats) {
+    if (stats.length > 0) {
+        console.log('📊 Translation Progress Summary:');
+        console.log(`  English: ${total}/${total} (100%) ✅`);
+        stats
+            .sort((a, b) => b.percentage - a.percentage)
+            .forEach((result) => {
+            let statusIcon = '✅';
+            if (result.percentage < 50)
+                statusIcon = '🔴';
+            else if (result.percentage < 80)
+                statusIcon = '🟡';
+            const padding = ' '.repeat(8 - result.locale.length);
+            const issues = [];
+            if (result.missing.length > 0)
+                issues.push(`${result.missing.length} missing`);
+            if (result.untranslated.length > 0)
+                issues.push(`${result.untranslated.length} untranslated`);
+            const issuesNote = issues.length > 0 ? ` (${issues.join(', ')})` : '';
+            console.log(`  ${result.locale}:${padding}${result.completed}/${total} (${result.percentage}%) ${statusIcon}${issuesNote}`);
+        });
+    }
+}
+function printCertainStats(total, result) {
+    let statusIcon = '✅';
+    if (result.percentage < 50)
+        statusIcon = '🔴';
+    else if (result.percentage < 80)
+        statusIcon = '🟡';
+    console.log(`${statusIcon} Locale ${result.locale}: ${result.completed}/${total} keys (${result.percentage}%) ${statusIcon}`);
+    if (result.missing.length > 0) {
+        console.log(`❌ Missing keys (${result.missing.length}):`);
+        // Group missing keys by section for better readability
+        const keysBySection = new Map();
+        result.missing.forEach(([key, value]) => {
+            const section = key.split('.').slice(0, 2).join('.');
+            if (!keysBySection.has(section)) {
+                keysBySection.set(section, []);
+            }
+            keysBySection.get(section).push(key);
+        });
+        keysBySection.forEach((keys, section) => {
+            if (keys.length === 1) {
+                console.log(`  - ${keys[0]}`);
+            }
+            else if (keys.length <= 3) {
+                keys.forEach((key) => console.log(`  - ${key}`));
+            }
+            else {
+                console.log(`  - ${section}.* (${keys.length} keys missing)`);
+                console.log(`    Examples: ${keys
+                    .slice(0, 2)
+                    .map((k) => k.split('.').pop())
+                    .join(', ')}...`);
+            }
+        });
+    }
+    if (result.untranslated.length > 0) {
+        console.log(`🔄 Untranslated values (${result.untranslated.length}):`);
+        result.untranslated.slice(0, 5).forEach(([key, value]) => {
+            console.log(`  - ${key}: "${result.enFlat[key]}"`);
+        });
+        if (result.untranslated.length > 5) {
+            console.log(`  ... and ${result.untranslated.length - 5} more`);
+        }
+    }
+    if (result.extra.length > 0) {
+        console.log(`⚠️ Extra keys (${result.extra.length}): ${result.extra.map(([k]) => k).join(', ')}`);
+    }
+    console.log(''); // Empty line between locales
+}
+function printTotalStats(total, results) {
+    if (results.length > 0) {
+        console.log('📊 Translation Stats:');
+        results
+            .sort((a, b) => b.percentage - a.percentage)
+            .forEach((result) => {
+            printCertainStats(total, result);
+        });
+    }
+}
+async function checkOneLocaleAction(locale) {
+    const jsonPath = join(LOCALE_DIR, locale, 'flat.json');
+    if (!existsSync(jsonPath)) {
+        console.error(`❌ Error: ${locale}/flat.json not found.`);
+        process.exit(1);
+    }
+    const enFlatPath = join(LOCALE_DIR, 'en', 'flat.json');
+    if (!existsSync(enFlatPath)) {
+        console.error('❌ Error: en/flat.json not found');
+        process.exit(1);
+    }
+    const enFlat = JSON.parse(readFileSync(enFlatPath, 'utf8'));
+    const enMap = new Map(Object.entries(enFlat));
+    const totalKeys = enMap.size;
+    const localeStats = await getLocaleStats(locale);
+    printCertainStats(totalKeys, localeStats);
+    console.log('📊 Summary:');
+    console.log(`  ${locale}: ${localeStats.completed}/${totalKeys} (${localeStats.percentage}%)`);
+}
 async function checkAllLocalesAction() {
     const enFlatPath = join(LOCALE_DIR, 'en', 'flat.json');
     if (!existsSync(enFlatPath)) {
@@ -272,8 +442,8 @@ async function checkAllLocalesAction() {
         process.exit(1);
     }
     const enFlat = JSON.parse(readFileSync(enFlatPath, 'utf8'));
-    const enKeys = new Set(Object.keys(enFlat));
-    const totalKeys = enKeys.size;
+    const enMap = new Map(Object.entries(enFlat));
+    const totalKeys = enMap.size;
     const locales = readdirSync(LOCALE_DIR, { withFileTypes: true })
         .filter((dirent) => dirent.isDirectory() &&
         dirent.name !== 'en' &&
@@ -284,88 +454,11 @@ async function checkAllLocalesAction() {
     console.log(`✅ Locale en: ${totalKeys}/${totalKeys} keys (100%) ✅\n`);
     // Process other locales
     for (const locale of locales) {
-        const jsonPath = join(LOCALE_DIR, locale, 'flat.json');
-        if (!existsSync(jsonPath)) {
-            console.warn(`⚠️ Warning: ${jsonPath} not found\n`);
-            continue;
-        }
-        try {
-            const flatData = JSON.parse(readFileSync(jsonPath, 'utf8'));
-            const flatKeys = new Set(Object.keys(flatData));
-            const missingKeys = [...enKeys].filter((key) => !flatKeys.has(key));
-            const extraKeys = [...flatKeys].filter((key) => !enKeys.has(key));
-            const completed = totalKeys - missingKeys.length;
-            const percentage = Math.round((completed / totalKeys) * 100 * 10) / 10;
-            results.push({
-                locale,
-                completed,
-                missing: missingKeys,
-                extra: extraKeys,
-                percentage,
-            });
-            // Status icon based on completion
-            let statusIcon = '✅';
-            if (percentage < 50)
-                statusIcon = '🔴';
-            else if (percentage < 80)
-                statusIcon = '🟡';
-            console.log(`${statusIcon} Locale ${locale}: ${completed}/${totalKeys} keys (${percentage}%) ${statusIcon}`);
-            if (missingKeys.length > 0) {
-                console.log(`❌ Missing keys:`);
-                // Group missing keys by section for better readability
-                const keysBySection = new Map();
-                missingKeys.forEach((key) => {
-                    const section = key.split('.').slice(0, 2).join('.');
-                    if (!keysBySection.has(section)) {
-                        keysBySection.set(section, []);
-                    }
-                    keysBySection.get(section).push(key);
-                });
-                keysBySection.forEach((keys, section) => {
-                    if (keys.length === 1) {
-                        console.log(`  - ${keys[0]}`);
-                    }
-                    else if (keys.length <= 3) {
-                        keys.forEach((key) => console.log(`  - ${key}`));
-                    }
-                    else {
-                        console.log(`  - ${section}.* (${keys.length} keys missing)`);
-                        console.log(`    Examples: ${keys
-                            .slice(0, 2)
-                            .map((k) => k.split('.').pop())
-                            .join(', ')}...`);
-                    }
-                });
-            }
-            if (extraKeys.length > 0) {
-                console.log(`⚠️ Extra keys: ${extraKeys.join(', ')}`);
-            }
-            console.log(''); // Empty line between locales
-        }
-        catch (error) {
-            console.error(`❌ Error validating ${jsonPath}:`, error);
-        }
+        const stats = await getLocaleStats(locale);
+        results.push(stats);
     }
-    // Summary report
-    if (results.length > 0) {
-        console.log('📊 Translation Progress Summary:');
-        console.log(`  English: ${totalKeys}/${totalKeys} (100%) ✅`);
-        results
-            .sort((a, b) => b.percentage - a.percentage)
-            .forEach((result) => {
-            let statusIcon = '✅';
-            if (result.percentage < 50)
-                statusIcon = '🔴';
-            else if (result.percentage < 80)
-                statusIcon = '🟡';
-            const padding = ' '.repeat(8 - result.locale.length);
-            console.log(`  ${result.locale}:${padding}${result.completed}/${totalKeys} (${result.percentage}%) ${statusIcon}`);
-        });
-        const avgCompletion = Math.round((results.reduce((sum, r) => sum + r.percentage, 0) /
-            results.length) *
-            10) / 10;
-        console.log(`\n📈 Average completion: ${avgCompletion}%`);
-    }
+    printTotalStats(totalKeys, results);
+    printSummary(totalKeys, results);
 }
 async function updateAllNested() {
     const locales = readdirSync(LOCALE_DIR, { withFileTypes: true })
@@ -405,6 +498,11 @@ program
     .argument('<locale>', 'new locale code (e.g., de, fr, es)')
     .description('Create new locale template from en/flat.json')
     .action(createTemplate);
+program
+    .command('check-one')
+    .description('Check your locale against en/flat.json')
+    .argument('<locale>', 'Check your translation')
+    .action(checkOneLocaleAction);
 program
     .command('check-all')
     .description('Check all locales against en/flat.json')
