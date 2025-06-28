@@ -1,11 +1,47 @@
 #!/usr/bin/env node
 import { Command } from 'commander';
-import { readFileSync, readdirSync, writeFileSync, existsSync, mkdirSync, } from 'fs';
+import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync, } from 'fs';
 import { join } from 'path';
 const LANG_DIR = './src/lang';
 const LOCALE_DIR = join(LANG_DIR, 'locale');
 const TYPES_DIR = join(LANG_DIR, 'types');
 const INTERFACES_FILE = join(TYPES_DIR, 'interfaces.ts');
+async function getObjectFromTs(tsPath) {
+    const content = readFileSync(tsPath, 'utf8');
+    // Парсим TypeScript объявление вида:
+    // const Locale: LocaleSchema = { ... };
+    // const Locale : DeepPartial<LocaleSchema> = { ... };
+    const objectRegex = new RegExp([
+        'const\\s+', // "const" + обязательные пробелы
+        '\\w+', // имя переменной (Locale)
+        '\\s*', // необязательные пробелы перед двоеточием
+        ':', // двоеточие
+        '\\s*', // необязательные пробелы после двоеточия
+        '[\\w<>[\\],\\s]+', // тип (LocaleSchema, DeepPartial<LocaleSchema>, etc)
+        '\\s*', // необязательные пробелы перед равно
+        '=', // знак равно
+        '\\s*', // необязательные пробелы после равно
+        '({[\\s\\S]*?})', // объект в скобках (захватывающая группа) - ЭТО НАМ НУЖНО
+        '\\s*', // необязательные пробелы перед точкой с запятой
+        ';', // точка с запятой
+    ].join(''));
+    const objectMatch = content.match(objectRegex);
+    if (!objectMatch) {
+        throw new Error(`Object declaration not found in: ${tsPath}`);
+    }
+    const objectString = objectMatch[1]
+        .replace(/^\s*([a-zA-Z_$][a-zA-Z0-9_$]*)\s*:/gm, `'$1':`)
+        .replace(/'/g, '"')
+        .replace(/,\s*([}\]])/g, '$1');
+    try {
+        return JSON.parse(objectString);
+    }
+    catch (err) {
+        console.log(`❌ Got error while parsing ts object: ${err.message}`);
+        process.exit(1);
+    }
+    return JSON.parse(objectString);
+}
 function flattenLocale(nested) {
     const result = {};
     function traverse(obj, path = '') {
@@ -24,6 +60,18 @@ function flattenLocale(nested) {
     }
     traverse(nested);
     return result;
+}
+async function flatifyAction(locale) {
+    const tsPath = join(LOCALE_DIR, `${locale}/index.ts`);
+    const jsonPath = join(LOCALE_DIR, `${locale}/flat.json`);
+    if (!existsSync(tsPath)) {
+        console.error(`❌ Error: ${tsPath} not found`);
+        process.exit(1);
+    }
+    const nested = await getObjectFromTs(tsPath);
+    const sortedFlat = sortObjectKeys(flattenLocale(nested));
+    writeFileSync(jsonPath, JSON.stringify(sortedFlat, null, 4));
+    console.log(`✅ Generated ${jsonPath}`);
 }
 function nestifyLocale(flat) {
     const result = {};
@@ -158,33 +206,6 @@ git add . && git commit -m "Add <LANGUAGE_CODE> translation"
 - Open GitHub issue for questions before starting large translations
 - Test your JSON syntax before submitting`;
 }
-async function getObjectFromTs(tsPath) {
-    const content = readFileSync(tsPath, 'utf8');
-    // Парсим TypeScript объявление вида:
-    // const Locale: LocaleSchema = { ... };
-    // const Locale : DeepPartial<LocaleSchema> = { ... };
-    const objectRegex = new RegExp([
-        'const\\s+', // "const" + обязательные пробелы
-        '\\w+', // имя переменной (Locale)
-        '\\s*', // необязательные пробелы перед двоеточием
-        ':', // двоеточие
-        '\\s*', // необязательные пробелы после двоеточия
-        '[\\w<>[\\],\\s]+', // тип (LocaleSchema, DeepPartial<LocaleSchema>, etc)
-        '\\s*', // необязательные пробелы перед равно
-        '=', // знак равно
-        '\\s*', // необязательные пробелы после равно
-        '({[\\s\\S]*?})', // объект в скобках (захватывающая группа) - ЭТО НАМ НУЖНО
-        '\\s*', // необязательные пробелы перед точкой с запятой
-        ';', // точка с запятой
-    ].join(''));
-    const objectMatch = content.match(objectRegex);
-    if (!objectMatch) {
-        throw new Error(`Object declaration not found in: ${tsPath}`);
-    }
-    const objectString = objectMatch[1].replace(/([a-zA-Z_$][a-zA-Z0-9_$]*)\s*:/g, '"$1":');
-    // objectMatch[1] - это JSON объект из захватывающей группы
-    return JSON.parse(objectMatch[1]);
-}
 async function generateTypes(nested) {
     try {
         const types = generateTypesFromNest(nested);
@@ -213,12 +234,10 @@ async function createTemplate(locale) {
     }
     try {
         mkdirSync(newLocaleDir, { recursive: true });
-        // Копируем flat.json из en
         const enFlatData = JSON.parse(readFileSync(enJsonPath, 'utf8'));
         const snoozedEnFlatData = Object.fromEntries(Object.entries(enFlatData).map(([key, value]) => Array.isArray(value) ? [key, []] : [key, '']));
         const newJsonPath = join(newLocaleDir, 'flat.json');
         writeFileSync(newJsonPath, JSON.stringify(snoozedEnFlatData, null, 4));
-        // Создаём гайд
         const guidePath = join(newLocaleDir, 'TRANSLATION_GUIDE.md');
         writeFileSync(guidePath, getTranslationGuide());
         console.log(`✅ Created locale template: ${newLocaleDir}/`);
@@ -469,7 +488,6 @@ async function updateAllNested() {
         }
     }
 }
-// checkAllLocalesAction();
 const program = new Command();
 program
     .name('locale-tool')
@@ -481,9 +499,14 @@ program
     .description('Convert flat JSON to nested TypeScript format')
     .action(nestifyAction);
 program
-    .command('types')
-    .description('Generate TypeScript interfaces from en/flat.json')
-    .action(generateTypes);
+    .command('nest-all')
+    .description('Update nested TypeScript files for all locales from their flat.json')
+    .action(updateAllNested);
+program
+    .command('flat')
+    .argument('<locale>', 'locale code (e.g., en, ru, de)')
+    .description('Convert nested TypeScript format to flat JSON')
+    .action(flatifyAction);
 program
     .command('template')
     .argument('<locale>', 'new locale code (e.g., de, fr, es)')
@@ -491,15 +514,11 @@ program
     .action(createTemplate);
 program
     .command('check-locale')
-    .description('Check your locale against en/flat.json')
+    .description('Check your locale status against en/flat.json')
     .argument('<locale>', 'Check your translation')
     .action(checkOneLocaleAction);
 program
     .command('check-locales')
-    .description('Check all locales against en/flat.json')
+    .description('Check all locales status against en/flat.json')
     .action(checkAllLocalesAction);
-program
-    .command('update-all-nested')
-    .description('Update nested TypeScript files for all locales from their flat.json')
-    .action(updateAllNested);
 program.parse();
