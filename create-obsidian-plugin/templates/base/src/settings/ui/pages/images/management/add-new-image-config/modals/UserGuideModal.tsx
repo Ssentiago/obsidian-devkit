@@ -30,7 +30,7 @@ const UserGuideModal: React.FC<UserGuideModalProps> = ({ onClose }) => {
                 />
 
                 <ReactObsidianSetting
-                    addMultiDesc={(multiDesc) => {
+                    multiDesc={(multiDesc) => {
                         multiDesc.addDescriptions(
                             t.settings.pages.images.management.addNewImageConfig
                                 .userGuideModal.howItWorks.desc
@@ -47,7 +47,7 @@ const UserGuideModal: React.FC<UserGuideModalProps> = ({ onClose }) => {
                     setHeading={true}
                 />
                 <ReactObsidianSetting
-                    addMultiDesc={(multiDesc) => {
+                    multiDesc={(multiDesc) => {
                         multiDesc.addDescriptions(
                             t.settings.pages.images.management.addNewImageConfig
                                 .userGuideModal.howItWorks.desc
@@ -73,7 +73,7 @@ const UserGuideModal: React.FC<UserGuideModalProps> = ({ onClose }) => {
                         t.settings.pages.images.management.addNewImageConfig
                             .userGuideModal.findingSelectors.name
                     }
-                    addMultiDesc={(multiDesc) => {
+                    multiDesc={(multiDesc) => {
                         multiDesc.addDescriptions(
                             t.settings.pages.images.management.addNewImageConfig
                                 .userGuideModal.findingSelectors.desc

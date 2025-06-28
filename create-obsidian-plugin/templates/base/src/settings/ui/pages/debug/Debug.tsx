@@ -40,14 +40,14 @@ const Debug: FC = () => {
         <>
             <ReactObsidianSetting
                 name={`${t.settings.pages.debug.reportIssue.name}`}
-                addMultiDesc={(multidesc) => {
+                multiDesc={(multidesc) => {
                     multidesc.addDescriptions(
                         t.settings.pages.debug.reportIssue.desc
                     );
 
                     return multidesc;
                 }}
-                addButtons={[
+                buttons={[
                     (button) => {
                         button.setIcon('bug');
                         button.setTooltip(
@@ -83,7 +83,7 @@ const Debug: FC = () => {
             <ReactObsidianSetting
                 name={t.settings.pages.debug.enableLogging.name}
                 desc={t.settings.pages.debug.enableLogging.desc}
-                addToggles={[
+                toggles={[
                     (toggle) => {
                         toggle.setValue(plugin.settings.data.debug.enabled);
                         toggle.onChange(async (value) => {
@@ -98,7 +98,7 @@ const Debug: FC = () => {
             <ReactObsidianSetting
                 name={t.settings.pages.debug.logLevel.name}
                 desc={t.settings.pages.debug.logLevel.desc}
-                addDropdowns={[
+                dropdowns={[
                     (dropdown) => {
                         dropdown.addOptions({
                             none: 'None',
@@ -121,7 +121,7 @@ const Debug: FC = () => {
 
             <ReactObsidianSetting
                 name={t.settings.pages.debug.aboutExportedLogs.name}
-                addMultiDesc={(multiDesc) => {
+                multiDesc={(multiDesc) => {
                     multiDesc.addDescriptions(
                         t.settings.pages.debug.aboutExportedLogs.desc
                     );
@@ -131,7 +131,7 @@ const Debug: FC = () => {
 
             <ReactObsidianSetting
                 name={t.settings.pages.debug.exportLogs.name}
-                addButtons={[
+                buttons={[
                     (button) => {
                         button.setIcon('download');
                         button.setTooltip(
@@ -145,7 +145,7 @@ const Debug: FC = () => {
             />
             <ReactObsidianSetting
                 name={t.settings.pages.debug.copyLogs.name}
-                addButtons={[
+                buttons={[
                     (button) => {
                         button.setIcon('clipboard');
                         button.setTooltip(
@@ -174,7 +174,7 @@ const Debug: FC = () => {
             <ReactObsidianSetting
                 name={t.settings.pages.debug.clearLogsStorage.name}
                 desc={storageMessage}
-                addButtons={[
+                buttons={[
                     (button) => {
                         button.setIcon('trash');
                         button.setTooltip(

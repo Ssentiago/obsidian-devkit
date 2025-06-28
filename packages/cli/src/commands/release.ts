@@ -2,6 +2,7 @@ import { confirm, input, select } from '@inquirer/prompts';
 import chalk from 'chalk';
 import { execSync } from 'node:child_process';
 import fs from 'node:fs';
+import path from 'node:path';
 import prettier from 'prettier';
 import semver from 'semver';
 
@@ -9,20 +10,166 @@ const MANIFEST_PATH = 'manifest.json';
 const PACKAGE_PATH = 'package.json';
 const README_PATH = 'README.md';
 const CHANGELOG_PATH = 'CHANGELOG.md';
+const DIST_PATH = 'dist';
+const MAIN_BRANCHES = ['main', 'master'];
 
 interface JsonFile {
     version: string;
 }
 
+function setRootFolder() {
+    let current = process.cwd();
+    while (true) {
+        const pkg = path.join(current, 'manifest.json');
+        if (fs.existsSync(pkg)) {
+            process.chdir(current);
+            return current;
+        }
+
+        const parent = path.dirname(current);
+        if (parent === current) {
+            console.log(
+                chalk.red('package.json not found in any parent directories')
+            );
+            process.exit(1);
+        }
+        current = parent;
+    }
+}
+
 /**
- * Reads a JSON file, updates its "version" property, and writes it back.
- *
- * @param jsonPath - Path to the JSON file to be updated.
- * @param release - New version number to be written.
- *
- * @throws If there is an error reading the JSON file, it will be logged to console
- *          and the process will exit with code 1.
+ * Checking the availability of gh CLI
  */
+function checkGhCli() {
+    try {
+        execSync('gh --version', { stdio: 'ignore' });
+    } catch (error) {
+        console.error(
+            chalk.red(
+                'Github Cli (GH) was not found. Install it: https://cli.github.com/'
+            )
+        );
+        process.exit(1);
+    }
+}
+
+/**
+ * Cleaning and building
+ */
+async function buildProject() {
+    console.log('Cleaning and building...');
+
+    // Clearing dist
+    if (fs.existsSync(DIST_PATH)) {
+        fs.rmSync(DIST_PATH, { recursive: true, force: true });
+        console.log('The dist folder is cleared');
+    }
+
+    // Build
+    try {
+        execSync('npm run build', { stdio: 'inherit' });
+        console.log(chalk.green('The build is completed'));
+    } catch (error) {
+        console.error(chalk.red(`Build error: ${error}`));
+        process.exit(1);
+    }
+}
+
+/**
+ * Getting the Repository URL
+ */
+function getRepoUrl(): string {
+    try {
+        const repoInfo = execSync('gh repo view --json url', { stdio: 'pipe' })
+            .toString()
+            .trim();
+        const parsed = JSON.parse(repoInfo);
+        return parsed.url;
+    } catch (error) {
+        console.error('Error getting the repo URL:', error);
+        process.exit(1);
+    }
+}
+
+/**
+ * Extracting a changelog for a specific version
+ */
+function extractChangelogForVersion(version: string): string {
+    try {
+        const changelogContent = fs.readFileSync(CHANGELOG_PATH, 'utf8');
+        const lines = changelogContent.split('\n');
+
+        const versionPattern = new RegExp(
+            `^#\\s+\\[?${version.replace(/\./g, '\\.')}\\]?`
+        );
+        let startIndex = -1;
+        let endIndex = -1;
+
+        // Find the beginning of the section for the version
+        for (let i = 0; i < lines.length; i++) {
+            if (versionPattern.test(lines[i])) {
+                startIndex = i + 1;
+                break;
+            }
+        }
+
+        if (startIndex === -1) {
+            return `Changes for version ${version}`;
+        }
+
+        // Find the end of the section (next heading)
+        for (let i = startIndex; i < lines.length; i++) {
+            if (lines[i].startsWith('# ')) {
+                endIndex = i;
+                break;
+            }
+        }
+
+        const sectionLines =
+            endIndex === -1
+                ? lines.slice(startIndex)
+                : lines.slice(startIndex, endIndex);
+
+        return sectionLines.join('\n').trim();
+    } catch (error) {
+        console.error('Error reading changelog:', error);
+        return `Changes for version ${version}`;
+    }
+}
+
+/**
+ * Creating a GitHub release
+ */
+async function createGitHubRelease(
+    version: string,
+    previousVersion: string,
+    repoUrl: string
+) {
+    console.log('Creating a GitHub release...');
+
+    // Get a changelog for the version
+    const changelogSection = extractChangelogForVersion(version);
+
+    // Create a release body
+    const fullChangelogUrl = `${repoUrl}/compare/${previousVersion}...${version}`;
+    const releaseBody = `${changelogSection}\n\n**Full Changelog**: ${fullChangelogUrl}`;
+
+    // Get all files from dist
+    const distFiles = fs
+        .readdirSync(DIST_PATH)
+        .map((file) => path.join(DIST_PATH, file))
+        .join(' ');
+
+    try {
+        const releaseCommand = `gh release create ${version} ${distFiles} --title "Release ${version}" --notes "${releaseBody.replace(/"/g, '\\"')}"`;
+        execSync(releaseCommand, { stdio: 'inherit' });
+        console.log(chalk.green(`Release ${version} created and published`));
+    } catch (error) {
+        console.error('Release creation error:', error);
+        process.exit(1);
+    }
+}
+
 async function changeReleaseInJson(jsonPath: string, release: string) {
     try {
         const json = fs.readFileSync(jsonPath, 'utf8');
@@ -55,44 +202,25 @@ function checkChangelogSection(version: string): boolean {
 }
 
 /**
- * Runs a sequence of Git commands to commit and tag a new plugin version.
- *
- * @param RELEASE_VERSION - New version number to be written.
- * @param branch - Name of the Git branch to commit to.
- *
- * @throws If any of the Git commands fail, the error will be logged to console
- *          and the process will exit with code 1.
+ * Get operations via gh
  */
-async function performGitCommands(RELEASE_VERSION: string, branch: string) {
+async function performGitOperations(version: string, branch: string) {
     try {
         execSync('git reset', { stdio: 'ignore' });
         execSync(`git add ${PACKAGE_PATH} ${MANIFEST_PATH}`, {
             stdio: 'ignore',
         });
-        execSync(`git commit -m 'chore: update plugin version'`, {
+        execSync(`git commit -m 'chore: update plugin version to ${version}'`, {
             stdio: 'ignore',
         });
-        execSync('git push', { stdio: 'ignore' });
-        execSync(`git tag ${RELEASE_VERSION}`, { stdio: 'ignore' });
-        execSync(`git push origin ${branch} ${RELEASE_VERSION}`, {
-            stdio: 'ignore',
-        });
+        execSync(`git push origin ${branch}`, { stdio: 'ignore' });
+        console.log(chalk.green('The changes are running in the repo'));
     } catch (error) {
-        console.error('An error occurred during git operations:', error);
+        console.error('Error of git operations:', error);
         process.exit(1);
     }
 }
 
-/**
- * Asks the user to enter a new version number. It validates the input value
- * by checking if it is a valid semantic versioning format, if it already exists
- * in the previous versions, and if it is greater than the current version.
- *
- * @param previousVersions - An array of strings representing the previous version numbers.
- * @param currentVersion - The current version number as a string.
- * @param isFirstEnter - A boolean indicating if this is the first time the user is asked to enter a new version number.
- * @returns A Promise that resolves with the new version number as a string.
- */
 async function getNewVersion(
     previousVersions: string[],
     currentVersion: string,
@@ -126,24 +254,6 @@ async function getNewVersion(
     return answer;
 }
 
-/**
- * Presents a menu to the user to update the current version.
- *
- * It offers the following options:
- * - Patch (bug fixes)
- * - Minor (new functionality)
- * - Major (significant changes)
- * - Manual update (enter version)
- * - View previous versions
- * - Exit
- *
- * The function will return the new version number as a string.
- *
- * @param previousVersions - An array of strings representing the previous version numbers.
- * @param currentVersion - The current version number as a string.
- *
- * @returns A Promise that resolves with the new version number as a string.
- */
 async function versionMenu(
     previousVersions: string[],
     currentVersion: string
@@ -201,36 +311,58 @@ async function versionMenu(
 }
 
 /**
- * Get the new version of the plugin. If there are no tags, it asks the user to choose the new
- * version. Otherwise, it shows a version menu
- * or pick a new version by entering a number.
- *
- * @returns The new version of the plugin.
+ * Getting versions via gh
  */
-async function getVersion(): Promise<string> {
-    const tagOutput = execSync('git tag', { stdio: 'pipe' }).toString().trim();
-    const tags = tagOutput ? tagOutput.split('\n') : [];
+async function getVersion(): Promise<{
+    version: string;
+    previousVersion: string;
+}> {
+    try {
+        const releasesOutput = execSync('gh release list --limit 100', {
+            stdio: 'pipe',
+        })
+            .toString()
+            .trim();
 
-    const currentVersion = tags[tags.length - 1];
+        const releases = releasesOutput
+            ? releasesOutput.split('\n').map((line) => line.split('\t')[0])
+            : [];
 
-    if (tags.length === 0) {
-        return getNewVersion(tags, currentVersion, true);
+        const currentVersion = releases[0];
+
+        if (releases.length === 0) {
+            const version = await getNewVersion(releases, currentVersion, true);
+            return { version, previousVersion: '' };
+        }
+
+        const version = await versionMenu(releases, currentVersion);
+        return { version, previousVersion: currentVersion };
+    } catch (error) {
+        // Fallback on git tags if gh does not work
+        const tagOutput = execSync('git tag', { stdio: 'pipe' })
+            .toString()
+            .trim();
+        const tags = tagOutput ? tagOutput.split('\n') : [];
+        const currentVersion = tags[tags.length - 1];
+
+        if (tags.length === 0) {
+            const version = await getNewVersion(tags, currentVersion, true);
+            return { version, previousVersion: '' };
+        }
+
+        const version = await versionMenu(tags, currentVersion);
+        return { version, previousVersion: currentVersion };
     }
-
-    return versionMenu(tags, currentVersion);
 }
 
-/**
- * Asynchronously sets the release version by iterating through a loop to handle user input.
- *
- * The function prompts the user to enter a new version number, provides options for confirmation,
- * and executes Git commands to update the plugin version in package.json and manifest.json files.
- *
- * @returns A Promise that resolves when the release process is completed.
- */
 export async function release() {
+    setRootFolder();
+
+    checkGhCli();
+
     while (true) {
-        const RELEASE_VERSION = await getVersion();
+        const { version: RELEASE_VERSION, previousVersion } =
+            await getVersion();
 
         const confirmation = await select({
             message: `You entered version ${RELEASE_VERSION}. Continue?`,
@@ -273,7 +405,7 @@ export async function release() {
         );
 
         const confirmContinue = await confirm({
-            message: 'Continue with git operations?',
+            message: 'Continue with git operations and release?',
             default: true,
         });
 
@@ -282,40 +414,37 @@ export async function release() {
             process.exit(0);
         }
 
-        console.log('Making git stuffs...');
-
         const currentBranch = execSync('git rev-parse --abbrev-ref HEAD', {
             stdio: 'pipe',
         })
             .toString()
             .trim();
 
-        while (true) {
-            console.log(
-                `You are currently on branch ${currentBranch}. The new tag will be created on remote ${currentBranch}.`
-            );
-            const confirmation = await confirm({
-                message: 'Do you want to continue?',
-                default: true,
-            });
+        console.log(`Working with a branch: ${currentBranch}`);
 
-            if (confirmation) {
-                break;
-            } else {
-                console.log('See you later!');
-                process.exit(0);
-            }
+        if (!MAIN_BRANCHES.includes(currentBranch)) {
+            console.log(
+                chalk.red(
+                    `Expected one of branches: ${MAIN_BRANCHES.join(', ')}, got branch: ${currentBranch}`
+                )
+            );
+            process.exit(1);
         }
 
-        await performGitCommands(RELEASE_VERSION, currentBranch);
+        await performGitOperations(RELEASE_VERSION, currentBranch);
+
+        await buildProject();
+
+        const repoUrl = getRepoUrl();
+
+        await createGitHubRelease(RELEASE_VERSION, previousVersion, repoUrl);
 
         console.log(
             chalk.green(
-                `Release ${RELEASE_VERSION} has been successfully created and pushed.`
+                `Release ${RELEASE_VERSION} has been successfully created and published!`
             )
         );
-        process.exit(0);
+
+        break;
     }
 }
-
-

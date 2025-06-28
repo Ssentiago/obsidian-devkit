@@ -12,37 +12,24 @@ import {
     TextComponent,
     ToggleComponent,
 } from 'obsidian';
+
 import { MultiDescComponent } from '../custom-components/multi-decsription/MultiDescComponent';
 import { PrioritizedElement } from './interfaces';
 
 export type SettingCallback<T> = T | PrioritizedElement<T> | undefined | false;
 
-export type ButtonCallback = (button: ButtonComponent) => ButtonComponent;
-export type DropdownCallback = (
-    dropdown: DropdownComponent
-) => DropdownComponent;
-export type ExtraButtonCallback = (
-    button: ExtraButtonComponent
-) => ExtraButtonComponent;
+export type ButtonCallback = (button: ButtonComponent) => void;
+export type DropdownCallback = (dropdown: DropdownComponent) => void;
+export type ExtraButtonCallback = (button: ExtraButtonComponent) => void;
 export type MomentFormatCallback = (
     momentFormat: MomentFormatComponent
-) => MomentFormatComponent;
-export type SearchCallback = (search: SearchComponent) => SearchComponent;
-export type SliderCallback = (slider: SliderComponent) => SliderComponent;
-export type TextCallback = (text: TextComponent) => TextComponent;
-export type TextAreaCallback = (
-    textArea: TextAreaComponent
-) => TextAreaComponent;
-export type ToggleCallback = (toggle: ToggleComponent) => ToggleComponent;
-export type ColorPickerCallback = (
-    colorPicker: ColorComponent
-) => ColorComponent;
-export type ProgressBarCallback = (
-    progressBar: ProgressBarComponent
-) => ProgressBarComponent;
-export type MultiDescCallback = (
-    desc: MultiDescComponent
-) => MultiDescComponent;
-export type SetupSettingManuallyCallback = (
-    setting: ObsidianSetting
-) => ObsidianSetting;
+) => void;
+export type SearchCallback = (search: SearchComponent) => void;
+export type SliderCallback = (slider: SliderComponent) => void;
+export type TextCallback = (text: TextComponent) => void;
+export type TextAreaCallback = (textArea: TextAreaComponent) => void;
+export type ToggleCallback = (toggle: ToggleComponent) => void;
+export type ColorPickerCallback = (colorPicker: ColorComponent) => void;
+export type ProgressBarCallback = (progressBar: ProgressBarComponent) => void;
+export type MultiDescCallback = (desc: MultiDescComponent) => void;
+export type SetupSettingManuallyCallback = (setting: ObsidianSetting) => void;

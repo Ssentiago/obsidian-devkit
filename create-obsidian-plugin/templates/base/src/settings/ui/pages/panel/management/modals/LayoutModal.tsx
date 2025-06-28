@@ -26,7 +26,7 @@ const LayoutModal: React.FC<LayoutModalProps> = ({ onClose, title }) => {
             />
             <ReactObsidianSetting
                 name='Available panels'
-                addMultiDesc={(multiDesc) => {
+                multiDesc={(multiDesc) => {
                     multiDesc.addDesc(
                         '• Move Panel: By default located at bottom right - Contains 8 directional buttons for images movement'
                     );
@@ -42,7 +42,7 @@ const LayoutModal: React.FC<LayoutModalProps> = ({ onClose, title }) => {
             />
             <ReactObsidianSetting
                 name='How to customize panels'
-                addMultiDesc={(multiDesc) => {
+                multiDesc={(multiDesc) => {
                     multiDesc.addDesc(
                         '1. Use checkboxes below to toggle panel visibility on/off'
                     );

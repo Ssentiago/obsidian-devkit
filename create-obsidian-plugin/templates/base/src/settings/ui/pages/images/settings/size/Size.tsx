@@ -13,7 +13,7 @@ const Size: FC = () => {
         <>
             <ReactObsidianSetting
                 name={t.settings.pages.images.settings.size.header}
-                addMultiDesc={(multidesc) => {
+                multiDesc={(multidesc) => {
                     multidesc.addDesc(
                         t.settings.pages.images.settings.size.desc
                     );

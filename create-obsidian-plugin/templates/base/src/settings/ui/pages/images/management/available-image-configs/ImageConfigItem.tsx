@@ -59,7 +59,7 @@ export const ImageConfigItem: FC<UnitItemProps> = ({
             ref={editingItemRef}
         >
             <ReactObsidianSetting
-                addTexts={[
+                texts={[
                     (nameInput): TextComponent => {
                         nameInput.setValue(unit.name);
                         nameInput.inputEl.id = 'editing-name-input';
@@ -85,7 +85,7 @@ export const ImageConfigItem: FC<UnitItemProps> = ({
                         return selectorInput;
                     },
                 ]}
-                addButtons={[
+                buttons={[
                     (button): ButtonComponent => {
                         button.setIcon('circle-x');
                         button.setTooltip(itemL.buttons.cancel);
@@ -118,7 +118,7 @@ export const ImageConfigItem: FC<UnitItemProps> = ({
         <ReactObsidianSetting
             name={unit.name}
             desc={unit.selector}
-            addToggles={[
+            toggles={[
                 (toggle: ToggleComponent): ToggleComponent => {
                     toggle.setValue(unit.on);
                     toggle.setTooltip(
@@ -136,7 +136,7 @@ export const ImageConfigItem: FC<UnitItemProps> = ({
                     return toggle;
                 },
             ]}
-            addButtons={[
+            buttons={[
                 ![UnitConfigs.IMG_SVG, UnitConfigs.Default].contains(
                     unit.selector as UnitConfigs
                 ) &&
@@ -171,7 +171,7 @@ export const ImageConfigItem: FC<UnitItemProps> = ({
                         return button;
                     }),
             ]}
-            addExtraButtons={[
+            extraButtons={[
                 (button: ExtraButtonComponent): ExtraButtonComponent => {
                     button.setTooltip(
                         itemL.buttons.options.$format({ name: unit.name })

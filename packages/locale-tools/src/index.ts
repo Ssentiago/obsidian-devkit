@@ -1,17 +1,13 @@
 #!/usr/bin/env node
 import { Command } from 'commander';
 import {
-    readFileSync,
-    readdirSync,
-    writeFileSync,
     existsSync,
     mkdirSync,
+    readdirSync,
+    readFileSync,
+    writeFileSync,
 } from 'fs';
-import { execSync } from 'node:child_process';
-import { unlinkSync } from 'node:fs';
-import { Loc } from 'obsidian';
 import { join } from 'path';
-import { pathToFileURL } from 'url';
 
 type NestedObject = {
     [key: string]: string | string[] | NestedObject;
@@ -20,8 +16,51 @@ type NestedObject = {
 type FlatObject = Record<string, string | string[]>;
 const LANG_DIR = './src/lang';
 const LOCALE_DIR = join(LANG_DIR, 'locale');
-const TYPES_DIR = join(LANG_DIR, 'types/interfaces.ts');
+const TYPES_DIR = join(LANG_DIR, 'types');
 const INTERFACES_FILE = join(TYPES_DIR, 'interfaces.ts');
+
+async function getObjectFromTs(tsPath: string): Promise<any> {
+    const content = readFileSync(tsPath, 'utf8');
+
+    // Парсим TypeScript объявление вида:
+    // const Locale: LocaleSchema = { ... };
+    // const Locale : DeepPartial<LocaleSchema> = { ... };
+    const objectRegex = new RegExp(
+        [
+            'const\\s+', // "const" + обязательные пробелы
+            '\\w+', // имя переменной (Locale)
+            '\\s*', // необязательные пробелы перед двоеточием
+            ':', // двоеточие
+            '\\s*', // необязательные пробелы после двоеточия
+            '[\\w<>[\\],\\s]+', // тип (LocaleSchema, DeepPartial<LocaleSchema>, etc)
+            '\\s*', // необязательные пробелы перед равно
+            '=', // знак равно
+            '\\s*', // необязательные пробелы после равно
+            '({[\\s\\S]*?})', // объект в скобках (захватывающая группа) - ЭТО НАМ НУЖНО
+            '\\s*', // необязательные пробелы перед точкой с запятой
+            ';', // точка с запятой
+        ].join('')
+    );
+
+    const objectMatch = content.match(objectRegex);
+    if (!objectMatch) {
+        throw new Error(`Object declaration not found in: ${tsPath}`);
+    }
+
+    const objectString = objectMatch[1]
+        .replace(/^\s*([a-zA-Z_$][a-zA-Z0-9_$]*)\s*:/gm, `'$1':`)
+        .replace(/'/g, '"')
+        .replace(/,\s*([}\]])/g, '$1');
+
+    try {
+        return JSON.parse(objectString);
+    } catch (err: any) {
+        console.log(`❌ Got error while parsing ts object: ${err.message}`);
+        process.exit(1);
+    }
+
+    return JSON.parse(objectString);
+}
 
 function flattenLocale(nested: NestedObject): FlatObject {
     const result: FlatObject = {};
@@ -42,6 +81,24 @@ function flattenLocale(nested: NestedObject): FlatObject {
 
     traverse(nested);
     return result;
+}
+
+async function flatifyAction(locale: string) {
+    const tsPath = join(LOCALE_DIR, `${locale}/index.ts`);
+    const jsonPath = join(LOCALE_DIR, `${locale}/flat.json`);
+
+    if (!existsSync(tsPath)) {
+        console.error(`❌ Error: ${tsPath} not found`);
+        process.exit(1);
+    }
+
+    const nested = await getObjectFromTs(tsPath);
+
+    const sortedFlat = sortObjectKeys(flattenLocale(nested));
+
+    writeFileSync(jsonPath, JSON.stringify(sortedFlat, null, 4));
+
+    console.log(`✅ Generated ${jsonPath}`);
 }
 
 function nestifyLocale(flat: FlatObject): NestedObject {
@@ -188,50 +245,8 @@ git add . && git commit -m "Add <LANGUAGE_CODE> translation"
 - Test your JSON syntax before submitting`;
 }
 
-async function getObjectFromTs(tsPath: string): Promise<any> {
-    const content = readFileSync(tsPath, 'utf8');
-
-    // Парсим TypeScript объявление вида:
-    // const Locale: LocaleSchema = { ... };
-    // const Locale : DeepPartial<LocaleSchema> = { ... };
-    const objectRegex = new RegExp(
-        [
-            'const\\s+', // "const" + обязательные пробелы
-            '\\w+', // имя переменной (Locale)
-            '\\s*', // необязательные пробелы перед двоеточием
-            ':', // двоеточие
-            '\\s*', // необязательные пробелы после двоеточия
-            '[\\w<>[\\],\\s]+', // тип (LocaleSchema, DeepPartial<LocaleSchema>, etc)
-            '\\s*', // необязательные пробелы перед равно
-            '=', // знак равно
-            '\\s*', // необязательные пробелы после равно
-            '({[\\s\\S]*?})', // объект в скобках (захватывающая группа) - ЭТО НАМ НУЖНО
-            '\\s*', // необязательные пробелы перед точкой с запятой
-            ';', // точка с запятой
-        ].join('')
-    );
-
-    const objectMatch = content.match(objectRegex);
-    if (!objectMatch) {
-        throw new Error(`Object declaration not found in: ${tsPath}`);
-    }
-
-    // objectMatch[1] - это JSON объект из захватывающей группы
-    return JSON.parse(objectMatch[1]);
-}
-async function generateTypes(): Promise<void> {
-    const enLocaleDir = join(LOCALE_DIR, 'en');
-    const jsonPath = join(enLocaleDir, 'flat.json');
-    const tsPath = join(enLocaleDir, 'index.ts');
-
-    if (!existsSync(jsonPath)) {
-        console.error('❌ Error: en/flat.json not found. Run "flat en" first.');
-        process.exit(1);
-    }
-
+async function generateTypes(nested: NestedObject): Promise<void> {
     try {
-        const nested = await getObjectFromTs(tsPath);
-
         const types = generateTypesFromNest(nested);
 
         if (!existsSync(TYPES_DIR)) {
@@ -265,12 +280,15 @@ async function createTemplate(locale: string): Promise<void> {
     try {
         mkdirSync(newLocaleDir, { recursive: true });
 
-        // Копируем flat.json из en
-        const enFlatData = readFileSync(enJsonPath, 'utf8');
+        const enFlatData = JSON.parse(readFileSync(enJsonPath, 'utf8'));
+        const snoozedEnFlatData = Object.fromEntries(
+            Object.entries(enFlatData).map(([key, value]) =>
+                Array.isArray(value) ? [key, []] : [key, '']
+            )
+        );
         const newJsonPath = join(newLocaleDir, 'flat.json');
-        writeFileSync(newJsonPath, enFlatData);
+        writeFileSync(newJsonPath, JSON.stringify(snoozedEnFlatData, null, 4));
 
-        // Создаём гайд
         const guidePath = join(newLocaleDir, 'TRANSLATION_GUIDE.md');
         writeFileSync(guidePath, getTranslationGuide());
 
@@ -288,35 +306,22 @@ async function createTemplate(locale: string): Promise<void> {
     }
 }
 
-async function flattenAction(locale: string): Promise<void> {
-    const localeDir = join(LOCALE_DIR, locale);
-    const tsPath = join(localeDir, 'index.ts');
-    const jsonPath = join(localeDir, 'flat.json');
-    const readmePath = join(localeDir, 'TRANSLATION_GUIDE.md');
-
-    if (!existsSync(tsPath)) {
-        console.error(`❌ Error: ${tsPath} not found`);
-        process.exit(1);
+function sortObjectKeys(obj: any): any {
+    if (Array.isArray(obj)) {
+        return obj.map(sortObjectKeys);
     }
 
-    try {
-        const fullPath = pathToFileURL(join(process.cwd(), tsPath)).href;
-        const module = await import(fullPath + '?t=' + Date.now());
-        const nested = module.default;
-
-        const flat = flattenLocale(nested);
-        writeFileSync(jsonPath, JSON.stringify(flat, null, 2));
-
-        if (locale === 'en') {
-            writeFileSync(readmePath, getTranslationGuide());
-            console.log(`✅ Generated ${readmePath}`);
-        }
-
-        console.log(`✅ Generated ${jsonPath}`);
-    } catch (error) {
-        console.error(`❌ Error processing ${tsPath}:`, error);
-        process.exit(1);
+    if (obj !== null && typeof obj === 'object') {
+        const sorted: any = {};
+        Object.keys(obj)
+            .sort()
+            .forEach((key) => {
+                sorted[key] = sortObjectKeys(obj[key]);
+            });
+        return sorted;
     }
+
+    return obj;
 }
 
 async function nestifyAction(locale: string): Promise<void> {
@@ -331,12 +336,31 @@ async function nestifyAction(locale: string): Promise<void> {
 
     try {
         const flatData = JSON.parse(readFileSync(jsonPath, 'utf8'));
-        const nested = nestifyLocale(flatData);
 
-        const tsContent = `import type { LocaleSchema } from '../_types/interfaces';
+        const sortedFlatData = sortObjectKeys(flatData);
+
+        // sort in place
+        writeFileSync(jsonPath, JSON.stringify(sortedFlatData, null, 4));
+
+        const nested = sortObjectKeys(nestifyLocale(sortedFlatData));
+        const jsonString = JSON.stringify(nested, null, 4);
+        const cleanJson = jsonString.replace(
+            /"([a-zA-Z_$][a-zA-Z0-9_$]*)"\s*:/g,
+            '$1:'
+        );
+
+        const tsContent = `/**
+ * ⚠️ AUTO-GENERATED FILE — DO NOT EDIT!
+ *
+ * This file was generated by the \`nest\` script from 'flat.json'.
+ * To update it, run: \`npm run locale:nest <locale>\`
+ */
+ 
+ 
+import type { LocaleSchema } from '../../types/interfaces';
 ${locale !== 'en' ? `import { DeepPartial } from '../../types/definitions';\n` : ''}
            
-const Locale: ${locale !== 'en' ? 'DeepPartial<LocaleSchema>' : 'LocaleSchema'}  = ${JSON.stringify(nested, null, 4)};
+const Locale: ${locale !== 'en' ? 'DeepPartial<LocaleSchema>' : 'LocaleSchema'}  = ${cleanJson};
 
 export default Locale;`;
 
@@ -344,14 +368,13 @@ export default Locale;`;
         console.log(`✅ Generated ${tsPath}`);
 
         if (locale === 'en') {
-            await generateTypes();
+            await generateTypes(nested);
         }
     } catch (error) {
         console.error(`❌ Error processing ${jsonPath}:`, error);
         process.exit(1);
     }
 }
-
 interface LocaleStats {
     locale: string;
     completed: number;
@@ -383,21 +406,32 @@ async function getLocaleStats(locale: string): Promise<LocaleStats> {
     const totalKeys = enMap.size;
 
     try {
-        const flatData: FlatObject = JSON.parse(readFileSync(jsonPath, 'utf8'));
-        const flatMap = new Map(Object.entries(flatData));
+        const localeFlatData: FlatObject = JSON.parse(
+            readFileSync(jsonPath, 'utf8')
+        );
+        const localeFlatMap = new Map(Object.entries(localeFlatData));
 
-        const missingData = [...enMap].filter(([key, _]) => !flatMap.has(key));
+        const missingData = Array.from(enMap).filter(
+            ([key, _]) => !localeFlatMap.has(key)
+        );
 
-        const extraData = [...flatMap].filter(([key, _]) => !enMap.has(key));
+        const extraData = Array.from(localeFlatMap).filter(
+            ([key, _]) => !enMap.has(key)
+        );
 
-        const actualKeys = [...enMap].filter(([key, _]) => flatMap.has(key));
+        const localeActualMap = Array.from(localeFlatMap).filter(([key, _]) =>
+            enMap.has(key)
+        );
 
-        const untranslatedKeys = [...actualKeys].filter(
-            ([key, value]) => value === enFlat[key]
+        const untranslatedEntries = Array.from(localeActualMap).filter(
+            ([key, value]) =>
+                value === enFlat[key] ||
+                value === '' ||
+                (!Array.isArray(value) ? value.trim() : value.length === 0)
         );
 
         const completed =
-            totalKeys - missingData.length - untranslatedKeys.length;
+            totalKeys - missingData.length - untranslatedEntries.length;
 
         const percentage = Math.round((completed / totalKeys) * 100 * 10) / 10;
 
@@ -406,7 +440,7 @@ async function getLocaleStats(locale: string): Promise<LocaleStats> {
             completed,
             missing: missingData,
             extra: extraData,
-            untranslated: untranslatedKeys,
+            untranslated: untranslatedEntries,
             percentage,
             enFlat,
         };
@@ -552,12 +586,7 @@ async function checkAllLocalesAction(): Promise<void> {
     const totalKeys = enMap.size;
 
     const locales = readdirSync(LOCALE_DIR, { withFileTypes: true })
-        .filter(
-            (dirent) =>
-                dirent.isDirectory() &&
-                dirent.name !== 'en' &&
-                dirent.name !== '_types'
-        )
+        .filter((dirent) => dirent.isDirectory() && dirent.name !== 'en')
         .map((dirent) => dirent.name);
 
     const results: LocaleStats[] = [];
@@ -597,21 +626,23 @@ program
     .version('1.0.0');
 
 program
-    .command('flat')
-    .argument('<locale>', 'locale code (e.g., en, ru, de)')
-    .description('Convert TypeScript locale to flat JSON format')
-    .action(flattenAction);
-
-program
     .command('nest')
     .argument('<locale>', 'locale code (e.g., en, ru, de)')
     .description('Convert flat JSON to nested TypeScript format')
     .action(nestifyAction);
 
 program
-    .command('types')
-    .description('Generate TypeScript interfaces from en/flat.json')
-    .action(generateTypes);
+    .command('nest-all')
+    .description(
+        'Update nested TypeScript files for all locales from their flat.json'
+    )
+    .action(updateAllNested);
+
+program
+    .command('flat')
+    .argument('<locale>', 'locale code (e.g., en, ru, de)')
+    .description('Convert nested TypeScript format to flat JSON')
+    .action(flatifyAction);
 
 program
     .command('template')
@@ -620,21 +651,14 @@ program
     .action(createTemplate);
 
 program
-    .command('check-one')
-    .description('Check your locale against en/flat.json')
+    .command('check-locale')
+    .description('Check your locale status against en/flat.json')
     .argument('<locale>', 'Check your translation')
     .action(checkOneLocaleAction);
 
 program
-    .command('check-all')
-    .description('Check all locales against en/flat.json')
+    .command('check-locales')
+    .description('Check all locales status against en/flat.json')
     .action(checkAllLocalesAction);
-
-program
-    .command('update-all-nested')
-    .description(
-        'Update nested TypeScript files for all locales from their flat.json'
-    )
-    .action(updateAllNested);
 
 program.parse();

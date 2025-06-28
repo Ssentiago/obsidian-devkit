@@ -110,7 +110,7 @@ const AvailableImageConfigs: FC = () => {
                         .perPageSlider.name
                 }
                 setDisabled={modeState.mode === 'edit'}
-                addSliders={[
+                sliders={[
                     (slider) => {
                         slider.setValue(
                             plugin.settings.data.units.settingsPagination

@@ -1,7 +1,5 @@
 import React, { ReactPortal } from 'react';
-import { App } from "obsidian";
 interface ReactObsidianModalProps {
-    app: App;
     children: React.ReactNode;
     title: string;
     onClose: () => void;
@@ -13,5 +11,5 @@ interface ReactObsidianModalProps {
     className?: string;
     closable?: boolean;
 }
-declare const ReactObsidianModal: ({ children, title, onOpen, onClose, maxHeight, maxWidth, width, height, closable, className, app }: ReactObsidianModalProps) => ReactPortal;
+declare const ReactObsidianModal: ({ children, title, onOpen, onClose, maxHeight, maxWidth, width, height, closable, className, }: ReactObsidianModalProps) => ReactPortal;
 export default ReactObsidianModal;

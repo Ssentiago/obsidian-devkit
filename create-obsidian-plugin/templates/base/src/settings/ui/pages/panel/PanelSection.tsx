@@ -21,7 +21,7 @@ const PanelSection: FC = () => {
         <>
             <MiniNavbar>
                 <ReactObsidianSetting
-                    addButtons={[
+                    buttons={[
                         (button): ButtonComponent => {
                             button.setIcon('settings');
                             button.setTooltip('Panels Settings');

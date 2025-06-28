@@ -5,24 +5,24 @@ export interface ReactSetting extends ObsidianSetting {
 export interface SettingProps {
     desc?: string;
     name?: string;
+    multiDesc?: SettingCallback<MultiDescCallback>;
     class?: string;
     setHeading?: boolean;
     setDisabled?: boolean;
     setTooltip?: string;
     noBorder?: boolean;
     setupSettingManually?: SetupSettingManuallyCallback;
-    addButtons?: SettingCallback<ButtonCallback>[];
-    addExtraButtons?: SettingCallback<ExtraButtonCallback>[];
-    addTexts?: SettingCallback<TextCallback>[];
-    addTextAreas?: SettingCallback<TextAreaCallback>[];
-    addDropdowns?: SettingCallback<DropdownCallback>[];
-    addToggles?: SettingCallback<ToggleCallback>[];
-    addMomentFormats?: SettingCallback<MomentFormatCallback>[];
-    addSearches?: SettingCallback<SearchCallback>[];
-    addSliders?: SettingCallback<SliderCallback>[];
-    addColorPickers?: SettingCallback<ColorPickerCallback>[];
-    addProgressBars?: SettingCallback<ProgressBarCallback>[];
-    addMultiDesc?: SettingCallback<MultiDescCallback>;
+    buttons?: SettingCallback<ButtonCallback>[];
+    extraButtons?: SettingCallback<ExtraButtonCallback>[];
+    texts?: SettingCallback<TextCallback>[];
+    textAreas?: SettingCallback<TextAreaCallback>[];
+    dropdowns?: SettingCallback<DropdownCallback>[];
+    toggles?: SettingCallback<ToggleCallback>[];
+    momentFormats?: SettingCallback<MomentFormatCallback>[];
+    searches?: SettingCallback<SearchCallback>[];
+    sliders?: SettingCallback<SliderCallback>[];
+    colorPickers?: SettingCallback<ColorPickerCallback>[];
+    progressBars?: SettingCallback<ProgressBarCallback>[];
 }
 export interface PrioritizedElement<T> {
     callback: T;

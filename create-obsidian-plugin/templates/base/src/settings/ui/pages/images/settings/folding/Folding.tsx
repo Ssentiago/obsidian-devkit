@@ -17,7 +17,7 @@ const Folding: FC = (): React.ReactElement => {
 
             <ReactObsidianSetting
                 name={t.settings.pages.images.settings.fold.foldByDefault.name}
-                addToggles={[
+                toggles={[
                     (toggle): ToggleComponent => {
                         toggle
                             .setValue(
@@ -38,7 +38,7 @@ const Folding: FC = (): React.ReactElement => {
                     t.settings.pages.images.settings.fold.autoFoldOnFocusChange
                         .name
                 }
-                addToggles={[
+                toggles={[
                     (toggle): ToggleComponent => {
                         toggle
                             .setValue(

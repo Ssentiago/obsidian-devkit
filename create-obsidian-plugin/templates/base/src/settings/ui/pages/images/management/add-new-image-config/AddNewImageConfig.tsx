@@ -130,7 +130,7 @@ const AddNewImageConfig: FC = () => {
                 }
                 setHeading
                 noBorder
-                addMultiDesc={(multiDesc: MultiDescComponent) => {
+                multiDesc={(multiDesc: MultiDescComponent) => {
                     multiDesc.addDescriptions(
                         t.settings.pages.images.management.addNewImageConfig
                             .desc
@@ -139,7 +139,7 @@ const AddNewImageConfig: FC = () => {
                 }}
             />
             <ReactObsidianSetting
-                addTexts={[
+                texts={[
                     (name): TextComponent => {
                         name.inputEl.id = 'unit-name';
                         name.setPlaceholder(
@@ -177,7 +177,7 @@ const AddNewImageConfig: FC = () => {
                         return selector;
                     },
                 ]}
-                addButtons={[
+                buttons={[
                     (button): ButtonComponent => {
                         button.setIcon('save');
                         button.setTooltip(
@@ -190,7 +190,7 @@ const AddNewImageConfig: FC = () => {
                         return button;
                     },
                 ]}
-                addExtraButtons={[
+                extraButtons={[
                     Platform.isDesktopApp &&
                         ((extra): ExtraButtonComponent => {
                             extra.setIcon('info');

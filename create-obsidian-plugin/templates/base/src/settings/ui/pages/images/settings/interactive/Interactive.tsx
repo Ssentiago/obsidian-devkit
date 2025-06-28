@@ -52,14 +52,14 @@ const Interactive: FC = () => {
                 name={
                     t.settings.pages.images.settings.interactive.pickerMode.name
                 }
-                addMultiDesc={(m) => {
+                multiDesc={(m) => {
                     m.addDescriptions(
                         t.settings.pages.images.settings.interactive.pickerMode
                             .desc
                     );
                     return m;
                 }}
-                addToggles={[
+                toggles={[
                     (t) => {
                         t.setValue(
                             plugin.settings.data.units.interactivity.picker
@@ -78,14 +78,14 @@ const Interactive: FC = () => {
                 name={
                     t.settings.pages.images.settings.interactive.autoDetect.name
                 }
-                addMultiDesc={(m) => {
+                multiDesc={(m) => {
                     m.addDescriptions(
                         t.settings.pages.images.settings.interactive.autoDetect
                             .desc
                     );
                     return m;
                 }}
-                addToggles={[
+                toggles={[
                     (toggle) => {
                         toggle.setValue(
                             plugin.settings.data.units.interactivity.markdown
@@ -112,14 +112,14 @@ const Interactive: FC = () => {
                         t.settings.pages.images.settings.interactive
                             .activationMode.desc
                     }
-                    addButtons={[
+                    buttons={[
                         (button) => {
                             button.setIcon('message-circle-question');
                             button.setTooltip(activationModeTooltip);
                             return button;
                         },
                     ]}
-                    addDropdowns={[
+                    dropdowns={[
                         (dropdown) => {
                             dropdown.addOptions({
                                 immediate:

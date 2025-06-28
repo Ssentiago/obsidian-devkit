@@ -44,7 +44,7 @@ export const UnitOptionsModal: FC<UnitOptionsProps> = ({
                         .toUpperCase()
                         .concat(panel.slice(1).toLowerCase())}
                     key={panel}
-                    addToggles={[
+                    toggles={[
                         (toggle) => {
                             toggle.setValue(on);
                             toggle.onChange(async (value) => {

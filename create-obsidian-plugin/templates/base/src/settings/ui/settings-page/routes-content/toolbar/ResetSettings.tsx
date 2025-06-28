@@ -14,7 +14,7 @@ const ResetSettings: FC = () => {
 
     return (
         <ReactObsidianSetting
-            addButtons={[
+            buttons={[
                 (button): ButtonComponent => {
                     button.setIcon('rotate-ccw');
                     button.setTooltip('Reset settings to default');

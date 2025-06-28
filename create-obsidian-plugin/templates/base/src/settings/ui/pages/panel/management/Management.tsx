@@ -102,7 +102,7 @@ const Management: React.FC = () => {
             <ReactObsidianSetting
                 name='Apply preset'
                 desc={'Apply button visibility preset'}
-                addDropdowns={[
+                dropdowns={[
                     (dropdown) => {
                         dropdown
                             .addOption('', 'Select preset...')
@@ -128,7 +128,7 @@ const Management: React.FC = () => {
             <ReactObsidianSetting
                 name='Panel layout'
                 desc={'Adjust panel positions and visibility'}
-                addButtons={[
+                buttons={[
                     (button) => {
                         button.setIcon('layout');
                         button.setTooltip('Open panel layout editor');
@@ -142,7 +142,7 @@ const Management: React.FC = () => {
             <ReactObsidianSetting
                 name='Buttons layout'
                 desc={'Configure which buttons are shown on each panel'}
-                addButtons={[
+                buttons={[
                     (button) => {
                         button.setIcon('panels-top-left');
                         button.setTooltip('Open panel buttons editor');

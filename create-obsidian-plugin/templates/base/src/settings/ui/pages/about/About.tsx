@@ -13,7 +13,7 @@ const About: FC = () => {
         <>
             <ReactObsidianSetting
                 name={t.settings.pages.about.githubPage.name}
-                addButtons={[
+                buttons={[
                     (button) => {
                         button.setIcon('github');
                         button.setTooltip(

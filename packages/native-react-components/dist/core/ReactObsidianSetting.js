@@ -6,7 +6,7 @@ import { SettingWrapper } from '../styled/setting-wrapper';
 function isPrioritizedElement(element) {
     return undefined !== element.priority;
 }
-export const ReactObsidianSetting = ({ name, desc, setHeading, setDisabled, setTooltip, noBorder, class: className, addToggles, addTexts, addTextAreas, addMomentFormats, addDropdowns, addSearches, addButtons, addExtraButtons, addSliders, addColorPickers, addProgressBars, addMultiDesc, setupSettingManually, }) => {
+export const ReactObsidianSetting = ({ name, desc, setHeading, setDisabled, setTooltip, noBorder, class: className, toggles, texts, textAreas, momentFormats, dropdowns, searches, buttons, extraButtons, sliders, colorPickers, progressBars, multiDesc, setupSettingManually, }) => {
     const settingRef = React.useRef(null);
     const containerRef = React.useRef(null);
     const setupSetting = useCallback((setting) => {
@@ -22,19 +22,19 @@ export const ReactObsidianSetting = ({ name, desc, setHeading, setDisabled, setT
         if (setTooltip) {
             setting.setTooltip(setTooltip);
         }
-        if (addMultiDesc) {
-            const callback = isPrioritizedElement(addMultiDesc)
-                ? addMultiDesc.callback
-                : addMultiDesc;
+        if (multiDesc) {
+            const callback = isPrioritizedElement(multiDesc)
+                ? multiDesc.callback
+                : multiDesc;
             const descContainer = document.createElement('div');
             descContainer.addClass('setting-item-description');
             if (setting.infoEl) {
                 setting.infoEl.appendChild(descContainer);
             }
-            const multiDesc = new MultiDescComponent({
+            const multiDescComponent = new MultiDescComponent({
                 containerEl: descContainer,
             });
-            callback(multiDesc);
+            callback(multiDescComponent);
         }
         if (setHeading) {
             setting.setHeading();
@@ -43,7 +43,7 @@ export const ReactObsidianSetting = ({ name, desc, setHeading, setDisabled, setT
             setting.setClass(className);
         }
         const elements = [
-            ...(addToggles?.map((toggle, index) => ({
+            ...(toggles?.map((toggle, index) => ({
                 type: 'toggle',
                 callback: isPrioritizedElement(toggle)
                     ? toggle.callback
@@ -53,13 +53,13 @@ export const ReactObsidianSetting = ({ name, desc, setHeading, setDisabled, setT
                     : 0,
                 originalIndex: index,
             })) ?? []),
-            ...(addTexts?.map((text, index) => ({
+            ...(texts?.map((text, index) => ({
                 type: 'text',
                 callback: isPrioritizedElement(text) ? text.callback : text,
                 priority: isPrioritizedElement(text) ? text.priority : 0,
                 originalIndex: index,
             })) ?? []),
-            ...(addTextAreas?.map((textArea, index) => ({
+            ...(textAreas?.map((textArea, index) => ({
                 type: 'textArea',
                 callback: isPrioritizedElement(textArea)
                     ? textArea.callback
@@ -69,7 +69,7 @@ export const ReactObsidianSetting = ({ name, desc, setHeading, setDisabled, setT
                     : 0,
                 originalIndex: index,
             })) ?? []),
-            ...(addMomentFormats?.map((format, index) => ({
+            ...(momentFormats?.map((format, index) => ({
                 type: 'momentFormat',
                 callback: isPrioritizedElement(format)
                     ? format.callback
@@ -79,7 +79,7 @@ export const ReactObsidianSetting = ({ name, desc, setHeading, setDisabled, setT
                     : 0,
                 originalIndex: index,
             })) ?? []),
-            ...(addDropdowns?.map((dropdown, index) => ({
+            ...(dropdowns?.map((dropdown, index) => ({
                 type: 'dropdown',
                 callback: isPrioritizedElement(dropdown)
                     ? dropdown.callback
@@ -89,7 +89,7 @@ export const ReactObsidianSetting = ({ name, desc, setHeading, setDisabled, setT
                     : 0,
                 originalIndex: index,
             })) ?? []),
-            ...(addSearches?.map((search, index) => ({
+            ...(searches?.map((search, index) => ({
                 type: 'search',
                 callback: isPrioritizedElement(search)
                     ? search.callback
@@ -99,7 +99,7 @@ export const ReactObsidianSetting = ({ name, desc, setHeading, setDisabled, setT
                     : 0,
                 originalIndex: index,
             })) ?? []),
-            ...(addColorPickers?.map((colorPicker, index) => ({
+            ...(colorPickers?.map((colorPicker, index) => ({
                 type: 'colorPicker',
                 callback: isPrioritizedElement(colorPicker)
                     ? colorPicker.callback
@@ -109,7 +109,7 @@ export const ReactObsidianSetting = ({ name, desc, setHeading, setDisabled, setT
                     : 0,
                 originalIndex: index,
             })) ?? []),
-            ...(addProgressBars?.map((progressBar, index) => ({
+            ...(progressBars?.map((progressBar, index) => ({
                 type: 'progressBar',
                 callback: isPrioritizedElement(progressBar)
                     ? progressBar.callback
@@ -119,7 +119,7 @@ export const ReactObsidianSetting = ({ name, desc, setHeading, setDisabled, setT
                     : 0,
                 originalIndex: index,
             })) ?? []),
-            ...(addButtons?.map((button, index) => ({
+            ...(buttons?.map((button, index) => ({
                 type: 'button',
                 callback: isPrioritizedElement(button)
                     ? button.callback
@@ -129,7 +129,7 @@ export const ReactObsidianSetting = ({ name, desc, setHeading, setDisabled, setT
                     : 9,
                 originalIndex: index,
             })) ?? []),
-            ...(addExtraButtons?.map((button, index) => ({
+            ...(extraButtons?.map((button, index) => ({
                 type: 'extraButton',
                 callback: isPrioritizedElement(button)
                     ? button.callback
@@ -139,7 +139,7 @@ export const ReactObsidianSetting = ({ name, desc, setHeading, setDisabled, setT
                     : 10,
                 originalIndex: index,
             })) ?? []),
-            ...(addSliders?.map((slider, index) => ({
+            ...(sliders?.map((slider, index) => ({
                 type: 'slider',
                 callback: isPrioritizedElement(slider)
                     ? slider.callback
@@ -201,18 +201,18 @@ export const ReactObsidianSetting = ({ name, desc, setHeading, setDisabled, setT
         setDisabled,
         setTooltip,
         className,
-        addToggles,
-        addTexts,
-        addTextAreas,
-        addMomentFormats,
-        addDropdowns,
-        addSearches,
-        addButtons,
-        addExtraButtons,
-        addSliders,
-        addColorPickers,
-        addProgressBars,
-        addMultiDesc,
+        toggles,
+        texts,
+        textAreas,
+        momentFormats,
+        dropdowns,
+        searches,
+        buttons,
+        extraButtons,
+        sliders,
+        colorPickers,
+        progressBars,
+        multiDesc,
         setupSettingManually,
     ]);
     useLayoutEffect(() => {
@@ -235,18 +235,18 @@ export const ReactObsidianSetting = ({ name, desc, setHeading, setDisabled, setT
         setTooltip,
         noBorder,
         className,
-        addToggles,
-        addTexts,
-        addTextAreas,
-        addMomentFormats,
-        addDropdowns,
-        addSearches,
-        addButtons,
-        addExtraButtons,
-        addSliders,
-        addColorPickers,
-        addProgressBars,
-        addMultiDesc,
+        toggles,
+        texts,
+        textAreas,
+        momentFormats,
+        dropdowns,
+        searches,
+        buttons,
+        extraButtons,
+        sliders,
+        colorPickers,
+        progressBars,
+        multiDesc,
         setupSettingManually,
     ]);
     return (_jsx(SettingWrapper, { "$noBorder": noBorder, ref: containerRef, className: `react-obsidian-settings-item ${className ?? ''}` }));

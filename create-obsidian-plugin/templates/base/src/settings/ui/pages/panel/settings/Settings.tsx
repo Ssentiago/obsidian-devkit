@@ -50,7 +50,7 @@ const Settings: React.FC = () => {
             <ReactObsidianSetting
                 name={'Panels visibility'}
                 desc={'Control when panels will be visible'}
-                addDropdowns={[
+                dropdowns={[
                     (dropdown) => {
                         dropdown.addOptions({
                             always: 'Always',
@@ -74,7 +74,7 @@ const Settings: React.FC = () => {
                         return dropdown;
                     },
                 ]}
-                addButtons={[
+                buttons={[
                     (button) => {
                         button.setIcon('message-circle-question');
                         button.setTooltip(dropdownQuestionTooltip);
@@ -89,7 +89,7 @@ const Settings: React.FC = () => {
                     desc={
                         'Service panel will always be visible regardless of visibility mode'
                     }
-                    addToggles={[
+                    toggles={[
                         (toggle) => {
                             toggle.setValue(
                                 plugin.settings.data.panels.global.triggering

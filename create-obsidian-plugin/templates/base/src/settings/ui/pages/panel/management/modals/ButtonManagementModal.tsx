@@ -138,7 +138,7 @@ const ButtonManagementModal: React.FC<ButtonManagementModalProps> = ({
                                 key={tooltip}
                                 name={tooltip}
                                 noBorder={index !== panelData.length - 1}
-                                addButtons={[
+                                buttons={[
                                     {
                                         priority: UI_PRIORITY.BUTTON,
                                         callback: (button) => {
@@ -148,7 +148,7 @@ const ButtonManagementModal: React.FC<ButtonManagementModalProps> = ({
                                         },
                                     },
                                 ]}
-                                addToggles={[
+                                toggles={[
                                     {
                                         priority: UI_PRIORITY.TOGGLE,
                                         callback: (toggle) => {

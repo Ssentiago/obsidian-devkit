@@ -214,7 +214,7 @@ const DimensionsOption: FC<DimensionsOptionProps> = ({
         <>
             <ReactObsidianSetting
                 name={nameAndDesc.name}
-                addMultiDesc={(multiDesc) => {
+                multiDesc={(multiDesc) => {
                     debugger;
                     console.log(JSON.stringify(nameAndDesc.desc));
                     multiDesc.addDescriptions(nameAndDesc.desc);
@@ -228,7 +228,7 @@ const DimensionsOption: FC<DimensionsOptionProps> = ({
                 ref={inputsRef}
             >
                 <ReactObsidianSetting
-                    addTexts={[
+                    texts={[
                         (inputHeight): TextComponent => {
                             const parent = inputHeight.inputEl
                                 .parentElement as HTMLElement;
@@ -284,7 +284,7 @@ const DimensionsOption: FC<DimensionsOptionProps> = ({
                             return inputWidth;
                         },
                     ]}
-                    addDropdowns={[
+                    dropdowns={[
                         (dropdown) => {
                             dropdown.addOptions({ px: 'px', '%': '%' });
                             dropdown.setValue(heightUnit);
@@ -302,7 +302,7 @@ const DimensionsOption: FC<DimensionsOptionProps> = ({
                             return dropdown;
                         },
                     ]}
-                    addButtons={[
+                    buttons={[
                         (button) => {
                             button.setIcon('save');
                             button.setTooltip(
