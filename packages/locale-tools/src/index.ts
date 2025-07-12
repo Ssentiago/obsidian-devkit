@@ -22,46 +22,22 @@ const INTERFACES_FILE = join(TYPES_DIR, 'interfaces.ts');
 async function getObjectFromTs(tsPath: string): Promise<any> {
     const content = readFileSync(tsPath, 'utf8');
 
-    // Парсим TypeScript объявление вида:
-    // const Locale: LocaleSchema = { ... };
-    // const Locale : DeepPartial<LocaleSchema> = { ... };
-    const objectRegex = new RegExp(
-        [
-            'const\\s+', // "const" + обязательные пробелы
-            '\\w+', // имя переменной (Locale)
-            '\\s*', // необязательные пробелы перед двоеточием
-            ':', // двоеточие
-            '\\s*', // необязательные пробелы после двоеточия
-            '[\\w<>[\\],\\s]+', // тип (LocaleSchema, DeepPartial<LocaleSchema>, etc)
-            '\\s*', // необязательные пробелы перед равно
-            '=', // знак равно
-            '\\s*', // необязательные пробелы после равно
-            '({[\\s\\S]*?})', // объект в скобках (захватывающая группа) - ЭТО НАМ НУЖНО
-            '\\s*', // необязательные пробелы перед точкой с запятой
-            ';', // точка с запятой
-        ].join('')
-    );
+    // Вырезаем объявление объекта
+    const objectRegex = /const\s+\w+\s*:\s*[^=]+=\s*(\{[\s\S]*?\});/;
+    const match = content.match(objectRegex);
 
-    const objectMatch = content.match(objectRegex);
-    if (!objectMatch) {
+    if (!match) {
         throw new Error(`Object declaration not found in: ${tsPath}`);
     }
 
-    const objectString = objectMatch[1]
-        .replace(/^\s*([a-zA-Z_$][a-zA-Z0-9_$]*)\s*:/gm, `'$1':`)
-        .replace(/'/g, '"')
-        .replace(/,\s*([}\]])/g, '$1');
-
     try {
-        return JSON.parse(objectString);
+        // Убираем импорты и типы, оставляем только объект
+        const objectString = match[1];
+        return eval(`(${objectString})`);
     } catch (err: any) {
-        console.log(`❌ Got error while parsing ts object: ${err.message}`);
-        process.exit(1);
+        throw new Error(`Failed to parse object: ${err.message}`);
     }
-
-    return JSON.parse(objectString);
 }
-
 function flattenLocale(nested: NestedObject): FlatObject {
     const result: FlatObject = {};
 

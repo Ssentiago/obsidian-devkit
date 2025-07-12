@@ -1,12 +1,13 @@
-import { jsx as _jsx } from "react/jsx-runtime";
+import { Fragment as _Fragment, jsx as _jsx } from "react/jsx-runtime";
 import React, { useCallback, useLayoutEffect } from 'react';
 import { Setting as ObsidianSetting } from 'obsidian';
 import { MultiDescComponent } from '../custom-components/multi-decsription/MultiDescComponent';
 import { SettingWrapper } from '../styled/setting-wrapper';
+import { createRoot } from 'react-dom/client';
 function isPrioritizedElement(element) {
     return undefined !== element.priority;
 }
-export const ReactObsidianSetting = ({ name, desc, setHeading, setDisabled, setTooltip, noBorder, class: className, toggles, texts, textAreas, momentFormats, dropdowns, searches, buttons, extraButtons, sliders, colorPickers, progressBars, multiDesc, setupSettingManually, }) => {
+export const ReactObsidianSetting = ({ name, desc, setHeading, setDisabled, setTooltip, noBorder, class: className, toggles, texts, textAreas, momentFormats, dropdowns, searches, buttons, extraButtons, sliders, colorPickers, progressBars, multiDesc, setupSettingManually, children }) => {
     const settingRef = React.useRef(null);
     const containerRef = React.useRef(null);
     const setupSetting = useCallback((setting) => {
@@ -194,6 +195,15 @@ export const ReactObsidianSetting = ({ name, desc, setHeading, setDisabled, setT
             }
         });
         setting.setDisabled(!!setDisabled);
+        if (children && setting.controlEl) {
+            const childrenContainer = document.createElement('div');
+            childrenContainer.addClass('react-children-container');
+            setting.controlEl.appendChild(childrenContainer);
+            const root = createRoot(childrenContainer);
+            root.render(_jsx(_Fragment, { children: children }));
+            // Сохраняем root для cleanup
+            setting._childrenRoot = root;
+        }
     }, [
         name,
         desc,
@@ -214,6 +224,7 @@ export const ReactObsidianSetting = ({ name, desc, setHeading, setDisabled, setT
         progressBars,
         multiDesc,
         setupSettingManually,
+        children
     ]);
     useLayoutEffect(() => {
         if (!containerRef.current) {
@@ -224,6 +235,9 @@ export const ReactObsidianSetting = ({ name, desc, setHeading, setDisabled, setT
         settingRef.current = new ObsidianSetting(containerRef.current);
         setupSetting(settingRef.current);
         return () => {
+            if (settingRef.current && settingRef.current._childrenRoot) {
+                settingRef.current._childrenRoot.unmount();
+            }
             settingRef.current?.clear();
             containerRef.current?.empty();
         };

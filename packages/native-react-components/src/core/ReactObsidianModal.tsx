@@ -86,7 +86,15 @@ const ReactObsidianModal = ({
                 <div className={'modal-header'}>
                     <div className={'modal-title'}>{title}</div>
                 </div>
-                <div className={'modal-content'}>{children}</div>
+                <div
+                    className={'modal-content'}
+                    style={{
+                        position: 'relative',
+                        zIndex: 100000,
+                    }}
+                >
+                    {children}
+                </div>
             </div>
         </div>,
         modalRoot

@@ -33,6 +33,9 @@ const ReactObsidianModal = ({ children, title, onOpen, onClose, maxHeight, maxWi
             style['--dialog-max-height'] = height;
         return style;
     }, [width, height, maxWidth, maxHeight]);
-    return createPortal(_jsxs("div", { className: 'modal-container mod-dim', role: 'dialog', "aria-modal": 'true', "aria-labelledby": 'modal-title', style: modalContainerStyle, children: [_jsx("div", { className: 'modal-bg', onClick: () => closable && onClose(), style: { opacity: '0.85' }, "aria-hidden": 'true', onKeyDown: keyDownHandler }), _jsxs("div", { className: `modal ${className ?? ''}`, children: [_jsx("div", { className: 'modal-close-button', onClick: () => closable && onClose(), "aria-label": 'Close modal' }), _jsx("div", { className: 'modal-header', children: _jsx("div", { className: 'modal-title', children: title }) }), _jsx("div", { className: 'modal-content', children: children })] })] }), modalRoot);
+    return createPortal(_jsxs("div", { className: 'modal-container mod-dim', role: 'dialog', "aria-modal": 'true', "aria-labelledby": 'modal-title', style: modalContainerStyle, children: [_jsx("div", { className: 'modal-bg', onClick: () => closable && onClose(), style: { opacity: '0.85' }, "aria-hidden": 'true', onKeyDown: keyDownHandler }), _jsxs("div", { className: `modal ${className ?? ''}`, children: [_jsx("div", { className: 'modal-close-button', onClick: () => closable && onClose(), "aria-label": 'Close modal' }), _jsx("div", { className: 'modal-header', children: _jsx("div", { className: 'modal-title', children: title }) }), _jsx("div", { className: 'modal-content', style: {
+                            position: 'relative',
+                            zIndex: 100000,
+                        }, children: children })] })] }), modalRoot);
 };
 export default ReactObsidianModal;

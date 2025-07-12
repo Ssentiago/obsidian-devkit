@@ -10,6 +10,7 @@ import {
     SettingElement,
     SettingProps,
 } from '../typing/interfaces';
+import { createRoot } from 'react-dom/client';
 
 function isPrioritizedElement<T>(
     element: T | PrioritizedElement<T>
@@ -17,7 +18,7 @@ function isPrioritizedElement<T>(
     return undefined !== (element as PrioritizedElement<T>).priority;
 }
 
-export const ReactObsidianSetting: React.FC<SettingProps> = ({
+export const ReactObsidianSetting: React.FC<SettingProps & { children?: React.ReactNode }> = ({
     name,
     desc,
     setHeading,
@@ -38,6 +39,7 @@ export const ReactObsidianSetting: React.FC<SettingProps> = ({
     progressBars,
     multiDesc,
     setupSettingManually,
+    children
 }) => {
     const settingRef = React.useRef<ReactSetting | null>(null);
     const containerRef = React.useRef<HTMLDivElement>(null);
@@ -242,6 +244,18 @@ export const ReactObsidianSetting: React.FC<SettingProps> = ({
             });
 
             setting.setDisabled(!!setDisabled);
+
+            if (children && setting.controlEl) {
+                const childrenContainer = document.createElement('div');
+                childrenContainer.addClass('react-children-container');
+                setting.controlEl.appendChild(childrenContainer);
+
+                const root = createRoot(childrenContainer);
+                root.render(<>{children}</>);
+
+                // Сохраняем root для cleanup
+                (setting as any)._childrenRoot = root;
+            }
         },
         [
             name,
@@ -263,6 +277,7 @@ export const ReactObsidianSetting: React.FC<SettingProps> = ({
             progressBars,
             multiDesc,
             setupSettingManually,
+            children
         ]
     );
 
@@ -279,6 +294,9 @@ export const ReactObsidianSetting: React.FC<SettingProps> = ({
         setupSetting(settingRef.current);
 
         return () => {
+            if (settingRef.current && (settingRef.current as any)._childrenRoot) {
+                (settingRef.current as any)._childrenRoot.unmount();
+            }
             settingRef.current?.clear();
             containerRef.current?.empty();
         };
